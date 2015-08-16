@@ -1,4 +1,4 @@
-import java.util.List;
+import java.util.HashSet;
 
 /**
  * Created by hxiao on 15/8/11.
@@ -6,5 +6,14 @@ import java.util.List;
 public class User {
     public String name;
     public long createTime;
-    public List<String> keywords;
+    public HashSet<String> keywords;
+
+    public User(String name) {
+        this.name = name;
+        this.createTime = System.currentTimeMillis();
+        this.keywords = new HashSet<String>();
+    }
+
+
+
 }

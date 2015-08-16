@@ -7,8 +7,7 @@ import org.slf4j.LoggerFactory;
 
 import java.net.URL;
 import java.net.URLEncoder;
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
+import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 
@@ -16,32 +15,34 @@ import java.util.List;
 /**
  * Created by hxiao on 15/8/11.
  */
-public class NewsFetcher {
-    private static final Logger LOG = LoggerFactory.getLogger(NewsFetcher.class);
+public class KeywordItem {
+    private static final Logger LOG = LoggerFactory.getLogger(KeywordItem.class);
 
-    public String keyword;
-    public long createTime;
+    public final String keyword;
+    public final long createTime;
     public long lastUseTime;
-    public User creator;
-    public List<User> followers;
-    public LinkedHashSet<NewsItem> allItems;
+    public final String creator;
+    public final HashSet<String> followers;
+    // this only saves id for items belong to this keywords
+    public LinkedHashSet<PostItem> allItems;
 
-    private static String urlPattern = "https://news.google.com/news/section?cf=all&ned=us&hl=en&q=#QUERY&output=rss";
     private URL feedUrl;
 
-    public NewsFetcher(String keyword, User creator) {
+    public KeywordItem(String keyword, String creator) {
         this.creator = creator;
         this.lastUseTime = System.currentTimeMillis();
         this.createTime = System.currentTimeMillis();
         this.keyword = keyword;
         try {
+            String urlPattern = "https://news.google.com/news/section?cf=all&ned=us&hl=en&q=#QUERY&output=rss";
             this.feedUrl = new URL(urlPattern.replace("#QUERY", URLEncoder.encode(keyword, "UTF-8")));
         } catch (Exception ex) {
             ex.printStackTrace();
         }
-        this.followers = new ArrayList<User>();
+        this.followers = new HashSet<String>();
         this.followers.add(creator);
-        this.allItems = new LinkedHashSet<NewsItem>();
+        this.allItems = new LinkedHashSet<PostItem>();
+
     }
 
     public void update() {
@@ -51,9 +52,9 @@ public class NewsFetcher {
             SyndFeed feed = input.build(new XmlReader(feedUrl));
             List<SyndEntry> allFeeds = feed.getEntries();
             for (SyndEntry sf : allFeeds) {
-                NewsItem newsItem = new NewsItem(sf);
-                allItems.add(newsItem);
-                LOG.info("added a post!");
+                PostItem postItem = new PostItem(keyword, sf);
+                allItems.add(postItem);
+                LOG.info("New post {} is added to {}!", postItem.title, keyword);
             }
         }
         catch (Exception ex) {
