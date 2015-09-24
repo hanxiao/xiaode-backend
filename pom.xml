@@ -10,30 +10,41 @@
 
 <dependencies>
     <dependency>
+        <groupId>org.apache.httpcomponents</groupId>
+        <artifactId>httpclient</artifactId>
+        <version>4.1.2</version>
+    </dependency>
+    <dependency>
+        <groupId>junit</groupId>
+        <artifactId>junit</artifactId>
+        <version>3.8.1</version>
+        <scope>test</scope>
+    </dependency>
+    <dependency>
+        <groupId>commons-lang</groupId>
+        <artifactId>commons-lang</artifactId>
+        <version>2.6</version>
+    </dependency>
+    <dependency>
+        <groupId>commons-io</groupId>
+        <artifactId>commons-io</artifactId>
+        <version>2.0.1</version>
+    </dependency>
+    <dependency>
+        <groupId>log4j</groupId>
+        <artifactId>log4j</artifactId>
+        <version>1.2.16</version>
+    </dependency>
+    <dependency>
         <!-- jsoup HTML parser library @ http://jsoup.org/ -->
         <groupId>org.jsoup</groupId>
         <artifactId>jsoup</artifactId>
         <version>1.8.1</version>
     </dependency>
     <dependency>
-        <groupId>com.google.code.gson</groupId>
-        <artifactId>gson</artifactId>
-        <version>2.3.1</version>
-    </dependency>
-    <dependency>
         <groupId>com.rometools</groupId>
         <artifactId>rome</artifactId>
         <version>1.5.0</version>
-    </dependency>
-    <dependency>
-        <groupId>org.fnlp</groupId>
-        <artifactId>fnlp-app</artifactId>
-        <version>2.1-SNAPSHOT</version>
-    </dependency>
-    <dependency>
-        <groupId>org.fnlp</groupId>
-        <artifactId>fnlp-core</artifactId>
-        <version>2.1-SNAPSHOT</version>
     </dependency>
     <dependency>
         <groupId>net.sf.trove4j</groupId>

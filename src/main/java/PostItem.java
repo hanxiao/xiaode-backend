@@ -3,6 +3,8 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import utils.ChineseTrans;
 
 import java.util.HashMap;
@@ -11,28 +13,61 @@ import java.util.HashMap;
  * Created by hxiao on 15/8/11.
  */
 public class PostItem {
+
+    private static final Logger LOG = LoggerFactory.getLogger(PostItem.class);
+
     public int id;
     public String keyword;
     public String title;
-    public String subtitle;
-    public String text;
     public long publishTime;
-    public HashMap<String, String> linkUrl;
-    public String imageUrl;
+    public HashMap<String, ArticleItem> linkedArticles;
     public String author;
     public int numViews;
     public ChineseTrans chineseTrans = new ChineseTrans();
 
     public PostItem(String keyword, SyndEntry sf) {
+
         this.keyword =  keyword;
         this.publishTime = sf.getPublishedDate().getTime();
-        this.title = cleanTitle(sf.getTitle());
         this.author = sf.getAuthor();
-        this.text = cleanContent(sf.getDescription().getValue()).replace(this.title, "")
-                .replace(this.author, "").trim();
+        this.title = sf.getTitle();
         this.numViews = 0;
-        this.linkUrl =  new HashMap<String, String>();
         this.id = this.hashCode();
+
+        setLinkedArticles(sf);
+    }
+
+    private void setLinkedArticles(SyndEntry sf) {
+        linkedArticles = new HashMap<String, ArticleItem>();
+        String org_content = sf.getDescription().getValue();
+        Document doc = Jsoup.parse(org_content);
+        Elements links = doc.select("a[href]");
+
+        for (Element link : links) {
+            if (link.attr("abs:href").matches(".*url=.*")) {
+                String this_link = link.attr("abs:href").replaceAll(".*?url=", "").trim();
+                if (this_link.length() > 0 &&
+                        !linkedArticles.containsKey(this_link)) {
+                    ArticleItem articleItem;
+
+                    try {
+                        articleItem = new ArticleItem(this_link);
+                    } catch (Exception ex) {
+                        LOG.error("Smart extraction failed on {}", this_link);
+                        LOG.info("Fallback to regex extractor!");
+                        articleItem = new ArticleItem(
+                                cleanContent(sf.getDescription().getValue())
+                                        .replace(this.title, "")
+                                        .replace(this.author, "")
+                                        .trim(),
+                                this_link);
+
+                    }
+                    linkedArticles.put(this_link, articleItem);
+                    LOG.info("Extracted content from {} for keyword {}", this_link, keyword);
+                }
+            }
+        }
     }
 
     private String cleanTitle(String org_title) {
@@ -53,23 +88,20 @@ public class PostItem {
 
     private String cleanContent(String org_content) {
         String result;
-        org_content = chineseTrans.normalizeCAP(chineseTrans.toSimp(org_content), true);
+
         Document doc = Jsoup.parse(org_content);
         Elements links = doc.select("a[href]");
+
+        doc = Jsoup.parse(chineseTrans.normalizeCAP(chineseTrans.toSimp(org_content), true));
         result = doc.text()
                 .replaceAll("\\.\\.\\..*$", "")
                 .replaceAll("\"", "").trim();
-
-
-        for (Element link : links) {
-            if (link.attr("abs:href").matches(".*url=.*")) {
-                String this_link = link.attr("abs:href").replaceAll(".*?url=", "");
-                if (this_link.length() > 0) {
-                    linkUrl.put(link.text().trim(), this_link);
-                }
-            }
-        }
         return result;
+    }
+
+    @Override
+    public int hashCode() {
+        return this.title.hashCode();
     }
 
 }

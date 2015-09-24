@@ -12,10 +12,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class AllDatabase {
     private static final Logger LOG = LoggerFactory.getLogger(AllDatabase.class);
-    public HashMap<String, User> allUsers = new HashMap<String, User>();
-    public HashMap<String, KeywordItem> allKeywords = new HashMap<String, KeywordItem>();
-    int nrOfThreads = Runtime.getRuntime().availableProcessors();
-    ExecutorService executor = Executors.newFixedThreadPool(nrOfThreads);
+    private HashMap<String, User> allUsers = new HashMap<String, User>();
+    private HashMap<String, KeywordItem> allKeywords = new HashMap<String, KeywordItem>();
+    private int nrOfThreads = Runtime.getRuntime().availableProcessors();
+
+
+    public void touchUser(String usr) {
+        allUsers.get(usr).updateTime = System.currentTimeMillis();
+    }
 
     private void addUser(User user) {
         allUsers.put(user.name, user);
@@ -40,7 +44,7 @@ public class AllDatabase {
     }
 
     public void updateAll() {
-
+        ExecutorService executor = Executors.newFixedThreadPool(nrOfThreads);
         final AtomicInteger nrOfJobs = new AtomicInteger(0);
         for (final KeywordItem keywordItem : allKeywords.values()) {
 
@@ -55,17 +59,20 @@ public class AllDatabase {
             executor.execute(new Runnable() {
                 public void run() {
                     keywordItem.update();
+                    for (String usr: keywordItem.followers) {
+                        touchUser(usr);
+                    }
                     LOG.info("{} is updated", keywordItem.keyword);
                     nrOfJobs.decrementAndGet();
                 }
             });
+        }
 
-            executor.shutdown();
-            try {
-                executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
+        executor.shutdown();
+        try {
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
     }
 

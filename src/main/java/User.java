@@ -6,7 +6,10 @@ import java.util.HashSet;
 public class User {
     public String name;
     public long createTime;
+    public long updateTime;
     public HashSet<String> keywords;
+
+
 
     public User(String name) {
         this.name = name;
