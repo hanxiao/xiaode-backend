@@ -42,7 +42,7 @@ public class ArticleItem implements Serializable {
         } catch ( Exception ex ) {
             ex.printStackTrace();
         }
-        String header = html.substring(0,1000);
+        String header = html.substring(0,1000).toLowerCase();
         if (header.contains("charset=gbk")
                 || header.contains("charset=\"gbk\"")
                 || header.contains("charset='gbk'")) {
