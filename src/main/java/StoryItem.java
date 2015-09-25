@@ -1,4 +1,5 @@
 import com.rometools.rome.feed.synd.SyndEntry;
+import org.apache.commons.lang.builder.EqualsBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -71,18 +72,12 @@ public class StoryItem implements Serializable {
                         if (articleItem.imageUrl != null && !articleItem.imageUrl.trim().isEmpty()) {
                             images.add(articleItem.imageUrl);
                         }
+                        LOG.info("Extracted content from {} for keyword {}", this_link, keyword);
                     } catch (Exception ex) {
-                        LOG.error("Smart extraction failed on {}", this_link);
-                        LOG.info("Fallback to regex extractor!");
-                        articleItem = new ArticleItem(
-                                cleanContent(sf.getDescription().getValue())
-                                        .replace(this.title, "")
-                                        .replace(this.author, "")
-                                        .trim(),
-                                this_link);
+                        LOG.error("Smart extraction failed on {} Fallback to link", this_link);
+                        articleItem = new ArticleItem("", this_link);
                     }
                     sourceArticles.add(articleItem);
-                    LOG.info("Extracted content from {} for keyword {}", this_link, keyword);
                 }
             }
         }
@@ -120,6 +115,20 @@ public class StoryItem implements Serializable {
     @Override
     public int hashCode() {
         return this.title.hashCode();
+    }
+
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof StoryItem))
+            return false;
+        if (obj == this)
+            return true;
+
+        StoryItem rhs = (StoryItem) obj;
+        return new EqualsBuilder().
+                append(hashCode(), rhs.hashCode()).
+                isEquals();
     }
 
 }
