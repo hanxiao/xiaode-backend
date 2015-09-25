@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import utils.UpdateInterval;
 
 import java.io.IOException;
+import java.io.Serializable;
 import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashSet;
@@ -18,8 +19,8 @@ import java.util.List;
 /**
  * Created by hxiao on 15/8/11.
  */
-public class KeywordItem {
-    private static final Logger LOG = LoggerFactory.getLogger(KeywordItem.class);
+public class FeedItem implements Serializable {
+    private static transient final Logger LOG = LoggerFactory.getLogger(FeedItem.class);
 
     public final String keyword;
     public final long createTime;
@@ -27,11 +28,11 @@ public class KeywordItem {
     public final String creator;
     public final HashSet<String> followers;
     // this only saves id for items belong to this keywords
-    public LinkedHashSet<PostItem> allItems;
+    public HashSet<StoryItem> allStories;
 
     private URL feedUrl;
 
-    public KeywordItem(String keyword, String creator) {
+    public FeedItem(String keyword, String creator) {
         this.creator = creator;
         this.lastUpdateTime = 0;
         this.createTime = System.currentTimeMillis();
@@ -44,7 +45,7 @@ public class KeywordItem {
         }
         this.followers = new HashSet<String>();
         this.followers.add(creator);
-        this.allItems = new LinkedHashSet<PostItem>();
+        this.allStories = new LinkedHashSet<StoryItem>();
 
     }
 
@@ -56,11 +57,9 @@ public class KeywordItem {
                 SyndFeed feed = input.build(new XmlReader(feedUrl));
                 List<SyndEntry> allFeeds = feed.getEntries();
                 for (SyndEntry sf : allFeeds) {
-                    PostItem postItem = new PostItem(keyword, sf);
-                    if (postItem != null) {
-                        allItems.add(postItem);
-                    }
-                    LOG.info("New post {} is added to {}!", postItem.title, keyword);
+                    StoryItem storyItem = new StoryItem(keyword, sf);
+                    allStories.add(storyItem);
+                    LOG.info("New post {} is added to {}!", storyItem.title, keyword);
                 }
             }
             catch (IOException exception) {
@@ -71,7 +70,7 @@ public class KeywordItem {
             }
             this.lastUpdateTime = System.currentTimeMillis();
         } else {
-            LOG.info("This keyword has been updated {} mins ago.", timeDiff / UpdateInterval.HOUR.getNumVal());
+            LOG.info("This keyword has been updated {} mins ago.", (double)timeDiff / UpdateInterval.HOUR.getNumVal());
         }
 
 

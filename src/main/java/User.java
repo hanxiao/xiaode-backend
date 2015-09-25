@@ -1,14 +1,14 @@
+import java.io.Serializable;
 import java.util.HashSet;
 
 /**
  * Created by hxiao on 15/8/11.
  */
-public class User {
+public class User implements Serializable {
     public String name;
     public long createTime;
     public long updateTime;
     public HashSet<String> keywords;
-
 
 
     public User(String name) {

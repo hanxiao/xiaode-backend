@@ -7,38 +7,56 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import utils.ChineseTrans;
 
-import java.util.HashMap;
+import java.io.Serializable;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.HashSet;
 
 /**
  * Created by hxiao on 15/8/11.
  */
-public class PostItem {
+public class StoryItem implements Serializable {
 
-    private static final Logger LOG = LoggerFactory.getLogger(PostItem.class);
+    private static transient final Logger LOG = LoggerFactory.getLogger(StoryItem.class);
 
     public int id;
     public String keyword;
     public String title;
+    public String summary;
+    public HashSet<String> images;
     public long publishTime;
-    public HashMap<String, ArticleItem> linkedArticles;
+    public String publishDate;
+    public HashSet<ArticleItem> sourceArticles;
     public String author;
     public int numViews;
-    public ChineseTrans chineseTrans = new ChineseTrans();
+    public transient ChineseTrans chineseTrans;
 
-    public PostItem(String keyword, SyndEntry sf) {
 
+    public StoryItem(String keyword, SyndEntry sf) {
+        DateFormat df = new SimpleDateFormat("yyyyMMdd");
+
+        this.images = new HashSet<String>();
+        this.chineseTrans = new ChineseTrans();
         this.keyword =  keyword;
         this.publishTime = sf.getPublishedDate().getTime();
+        this.publishDate = df.format(publishTime);
         this.author = sf.getAuthor();
         this.title = sf.getTitle();
         this.numViews = 0;
         this.id = this.hashCode();
 
-        setLinkedArticles(sf);
+        this.summary = cleanContent(sf.getDescription().getValue())
+                .replace(this.title, "")
+                .replace(cleanTitle(this.title), "")
+                .replace(this.author, "")
+                .trim();
+
+        setSourceArticles(sf);
+
     }
 
-    private void setLinkedArticles(SyndEntry sf) {
-        linkedArticles = new HashMap<String, ArticleItem>();
+    private void setSourceArticles(SyndEntry sf) {
+        sourceArticles = new HashSet<ArticleItem>();
         String org_content = sf.getDescription().getValue();
         Document doc = Jsoup.parse(org_content);
         Elements links = doc.select("a[href]");
@@ -46,12 +64,13 @@ public class PostItem {
         for (Element link : links) {
             if (link.attr("abs:href").matches(".*url=.*")) {
                 String this_link = link.attr("abs:href").replaceAll(".*?url=", "").trim();
-                if (this_link.length() > 0 &&
-                        !linkedArticles.containsKey(this_link)) {
+                if (this_link.length() > 0) {
                     ArticleItem articleItem;
-
                     try {
                         articleItem = new ArticleItem(this_link);
+                        if (articleItem.imageUrl != null && !articleItem.imageUrl.trim().isEmpty()) {
+                            images.add(articleItem.imageUrl);
+                        }
                     } catch (Exception ex) {
                         LOG.error("Smart extraction failed on {}", this_link);
                         LOG.info("Fallback to regex extractor!");
@@ -61,9 +80,8 @@ public class PostItem {
                                         .replace(this.author, "")
                                         .trim(),
                                 this_link);
-
                     }
-                    linkedArticles.put(this_link, articleItem);
+                    sourceArticles.add(articleItem);
                     LOG.info("Extracted content from {} for keyword {}", this_link, keyword);
                 }
             }
