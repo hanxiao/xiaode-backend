@@ -42,9 +42,10 @@ public class ArticleItem implements Serializable {
         } catch ( Exception ex ) {
             ex.printStackTrace();
         }
-        if (html.contains("charset=gbk")
-                || html.contains("charset=\"gbk\"")
-                || html.contains("charset='gbk'")) {
+        String header = html.substring(0,1000);
+        if (header.contains("charset=gbk")
+                || header.contains("charset=\"gbk\"")
+                || header.contains("charset='gbk'")) {
             LOG.info("{} is in GBK", sourceLink);
             try {
                 connection =  new URL(sourceLink).openConnection();
@@ -54,9 +55,9 @@ public class ArticleItem implements Serializable {
             } catch ( Exception ex ) {
                 ex.printStackTrace();
             }
-        } else if (html.contains("charset=gb2312")
-                || html.contains("charset=\"gb2312\"")
-                || html.contains("charset='gb2312'")) {
+        } else if (header.contains("charset=gb2312")
+                || header.contains("charset=\"gb2312\"")
+                || header.contains("charset='gb2312'")) {
             LOG.info("{} is in GB2312", sourceLink);
             try {
                 connection =  new URL(sourceLink).openConnection();
