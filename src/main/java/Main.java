@@ -70,8 +70,8 @@ public class Main {
         }
 
         FeedDatabase feedDatabase;
-        if(dbFile.exists() && !dbFile.isDirectory()) {
-            feedDatabase = FeedDatabase.loadFile(dbFile);
+        if(dbJson.exists() && !dbJson.isDirectory()) {
+            feedDatabase = JsonIO.json2Database(dbJson);
         } else {
             LOG.info("No feeds database found! Generate from scratch!");
             feedDatabase = new FeedDatabase();
@@ -81,28 +81,32 @@ public class Main {
 
         feedDatabase.updateAll();
         JsonIO.database2Json(feedDatabase, dbJson);
-        feedDatabase.saveFile(new File("database.bin"));
+//        feedDatabase.saveFile(new File("database.bin"));
     }
 
 
     public KeywordNode generateKeywordTree() {
         KeywordNode categoryNode = new KeywordNode("欧洲", "经济");
-//        categoryNode.addChild(new KeywordNode("英国"));
-//        categoryNode.addChild(new KeywordNode("德国"));
-//        categoryNode.addChild(new KeywordNode("法国"));
-//        categoryNode.addChild(new KeywordNode("荷兰"));
-//        categoryNode.addChild(new KeywordNode("西班牙"));
-//        categoryNode.addChild(new KeywordNode("希腊"));
-//        categoryNode.addChild(new KeywordNode("意大利"));
-//        categoryNode.addChild(new KeywordNode("俄罗斯"));
-//        categoryNode.addChild(new KeywordNode("爱尔兰"));
-//        categoryNode.addChild(new KeywordNode("瑞典"));
+        categoryNode.addChild(new KeywordNode("英国"));
+        categoryNode.addChild(new KeywordNode("德国"));
+        categoryNode.addChild(new KeywordNode("芬兰"));
+        categoryNode.addChild(new KeywordNode("丹麦"));
+        categoryNode.addChild(new KeywordNode("土耳其"));
+        categoryNode.addChild(new KeywordNode("挪威"));
+        categoryNode.addChild(new KeywordNode("法国"));
+        categoryNode.addChild(new KeywordNode("荷兰"));
+        categoryNode.addChild(new KeywordNode("西班牙"));
+        categoryNode.addChild(new KeywordNode("希腊"));
+        categoryNode.addChild(new KeywordNode("意大利"));
+        categoryNode.addChild(new KeywordNode("俄罗斯"));
+        categoryNode.addChild(new KeywordNode("爱尔兰"));
+        categoryNode.addChild(new KeywordNode("瑞典"));
         categoryNode.addChild(new KeywordNode("瑞士"));
-//        categoryNode.addChild(new KeywordNode("乌克兰"));
-//        categoryNode.addChild(new KeywordNode("比利时"));
-//        categoryNode.addChild(new KeywordNode("葡萄牙"));
-//        categoryNode.addChild(new KeywordNode("欧元区"));
-//        categoryNode.addChild(new KeywordNode("欧洲央行"));
+        categoryNode.addChild(new KeywordNode("乌克兰"));
+        categoryNode.addChild(new KeywordNode("比利时"));
+        categoryNode.addChild(new KeywordNode("葡萄牙"));
+        categoryNode.addChild(new KeywordNode("欧元区"));
+        categoryNode.addChild(new KeywordNode("欧洲央行"));
 
         JsonIO.keywordTree2Json(categoryNode, new File("keywords.json"));
         return categoryNode;

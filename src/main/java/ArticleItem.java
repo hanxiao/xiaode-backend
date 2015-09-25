@@ -20,8 +20,8 @@ public class ArticleItem implements Serializable {
     String sourceLink;
 
 
-    public ArticleItem(String mainContent, String sourceLink) {
-        this.imageUrl = "";
+    public ArticleItem(String imageUrl, String mainContent, String sourceLink) {
+        this.imageUrl = imageUrl;
         this.mainContent = mainContent;
         this.sourceLink = sourceLink;
     }
@@ -72,6 +72,10 @@ public class ArticleItem implements Serializable {
 
         Article article = ce.extractContent(html, "ReadabilitySnack");
         this.imageUrl = article.getTopImage().getImageSrc();
+        if (this.imageUrl != null) {
+            this.imageUrl =
+                    this.imageUrl.startsWith("http") ? this.imageUrl : null;
+        }
         this.mainContent = article.getCleanedArticleText();
     }
 

@@ -41,8 +41,8 @@ public class StoryItem implements Serializable {
         this.keyword =  keyword;
         this.publishTime = sf.getPublishedDate().getTime();
         this.publishDate = df.format(publishTime);
-        this.author = sf.getAuthor();
-        this.title = sf.getTitle();
+        this.author = setAuthor(sf.getTitle());
+        this.title = cleanTitle(sf.getTitle());
         this.numViews = 0;
         this.id = this.hashCode();
 
@@ -69,18 +69,25 @@ public class StoryItem implements Serializable {
                     ArticleItem articleItem;
                     try {
                         articleItem = new ArticleItem(this_link);
-                        if (articleItem.imageUrl != null && !articleItem.imageUrl.trim().isEmpty()) {
-                            images.add(articleItem.imageUrl);
-                        }
                         LOG.info("Extracted content from {} for keyword {}", this_link, keyword);
                     } catch (Exception ex) {
                         LOG.error("Smart extraction failed on {} Fallback to link", this_link);
-                        articleItem = new ArticleItem("", this_link);
+                        articleItem = new ArticleItem(null, null, this_link);
+                    }
+                    if (articleItem.imageUrl != null && !articleItem.imageUrl.trim().isEmpty()) {
+                        images.add(articleItem.imageUrl);
                     }
                     sourceArticles.add(articleItem);
+
+
                 }
             }
         }
+    }
+
+
+    private String setAuthor(String org_title) {
+        return org_title.substring(org_title.lastIndexOf('-') + 1, org_title.length()).trim();
     }
 
     private String cleanTitle(String org_title) {
@@ -88,12 +95,13 @@ public class StoryItem implements Serializable {
         String result;
         org_title = chineseTrans.normalizeCAP(chineseTrans.toSimp(org_title), true);
 
-        author = org_title.substring(org_title.lastIndexOf('-') + 1, org_title.length()).trim();
         result = org_title
                 .replaceAll("-\\s.*?$", "")
-                .replaceAll("^.*[：:]", "")
                 .replaceAll(".*[\\(【《].*?[】\\)》]", "")
-                .replaceAll("\"", "").trim();
+                .trim();
+//                .replaceAll("^.*[：:]", "")
+//                .replaceAll(".*[\\(【《].*?[】\\)》]", "")
+//                .replaceAll("\"", "").trim();
         //result = org_title;
         return result;
     }
@@ -108,7 +116,8 @@ public class StoryItem implements Serializable {
         doc = Jsoup.parse(chineseTrans.normalizeCAP(chineseTrans.toSimp(org_content), true));
         result = doc.text()
                 .replaceAll("\\.\\.\\..*$", "")
-                .replaceAll("\"", "").trim();
+                .replaceAll("\"", "")
+                .trim();
         return result;
     }
 

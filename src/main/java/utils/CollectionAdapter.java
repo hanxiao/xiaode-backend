@@ -13,7 +13,7 @@ import java.util.Collection;
  */
 public class CollectionAdapter implements JsonSerializer<Collection<?>> {
     public JsonElement serialize(Collection<?> src, Type typeOfSrc, JsonSerializationContext context) {
-        if (src == null || src.isEmpty()) // exclusion is made here
+        if (src == null || src.isEmpty() || src.toString().trim().length() == 0) // exclusion is made here
             return null;
 
         JsonArray array = new JsonArray();

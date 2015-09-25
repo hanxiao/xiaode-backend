@@ -58,7 +58,9 @@ public class FeedItem implements Serializable {
                 List<SyndEntry> allFeeds = feed.getEntries();
                 for (SyndEntry sf : allFeeds) {
                     StoryItem storyItem = new StoryItem(keyword, sf);
-                    allStories.add(storyItem);
+                    if (storyItem != null) {
+                        allStories.add(storyItem);
+                    }
                     LOG.info("New post {} is added to {}!", storyItem.title, keyword);
                 }
             }

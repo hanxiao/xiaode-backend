@@ -60,4 +60,17 @@ public class JsonIO {
         return keywordNode;
     }
 
+    public static FeedDatabase json2Database(File inFile) {
+        Gson gson = new GsonBuilder().setPrettyPrinting()
+                .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
+        FeedDatabase feedDatabase = null;
+        try {
+            String content = new Scanner(inFile).useDelimiter("\\Z").next();
+            feedDatabase = gson.fromJson(content, FeedDatabase.class);
+        } catch (IOException e) {
+            LOG.error("Error {} whe reading files", e);
+        }
+        return feedDatabase;
+    }
+
 }
