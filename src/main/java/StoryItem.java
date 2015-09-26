@@ -65,18 +65,26 @@ public class StoryItem implements Serializable {
         for (Element link : links) {
             if (link.attr("abs:href").matches(".*url=.*")) {
                 String this_link = link.attr("abs:href").replaceAll(".*?url=", "").trim();
-                if (this_link.length() > 0) {
-                    ArticleItem articleItem;
+                ArticleItem articleItem = new ArticleItem(null, null, this_link);
+                if (this_link.length() > 0 && !sourceArticles.contains(articleItem)) {
+
                     try {
                         articleItem = new ArticleItem(this_link);
-                        LOG.info("Extracted content from {} for keyword {}", this_link, keyword);
+                        LOG.info("Extracted content from {} for feedName {}", this_link, keyword);
                     } catch (Exception ex) {
                         LOG.error("Smart extraction failed on {} Fallback to link", this_link);
                         articleItem = new ArticleItem(null, null, this_link);
                     }
+
                     if (articleItem.imageUrl != null && !articleItem.imageUrl.trim().isEmpty()) {
                         images.add(articleItem.imageUrl);
                     }
+
+                    if (articleItem.mainContent != null) {
+                        articleItem.mainContent = chineseTrans.normalizeCAP(
+                                chineseTrans.toSimp(articleItem.mainContent), false);
+                    }
+
                     sourceArticles.add(articleItem);
 
 

@@ -24,6 +24,8 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
+import java.net.URL;
+import java.util.Scanner;
 
 /**
  * User: sree
@@ -75,7 +77,7 @@ public class HtmlFetcher {
 		modTime = modifiedTime;
 	}
 
-	public String getHtml(String url, int sokTimeout) throws Exception {
+	public String getHtml(String url, int sokTimeout, String encodeStr) throws Exception {
 		logger.info("url  " + url);
 		HttpResponse response = null;
 		initClient(sokTimeout);
@@ -98,7 +100,7 @@ public class HtmlFetcher {
 			if (statusCode == 200 || statusCode == 201 || statusCode == 202) {
 				logger.debug("HTTP status code  " + statusCode
 						+ " OK,Proceeding... ");
-				htmlResult = getHtmlSource(response);
+				htmlResult = getHtmlSource(response, encodeStr);
 
 			} else if (statusCode == 304) {
 
@@ -146,6 +148,23 @@ public class HtmlFetcher {
 		return htmlResult;
 	}
 
+	public String getHtml(String url, int sokTimeout) throws Exception {
+		String html = getHtml(url, sokTimeout, "utf-8");
+		String header = html.substring(0,1000).toLowerCase();
+
+		if (header.contains("charset=gbk")
+				|| header.contains("charset=\"gbk\"")
+				|| header.contains("charset='gbk'")) {
+			html = getHtml(url, sokTimeout, "gbk");
+		} else if (header.contains("charset=gb2312")
+				|| header.contains("charset=\"gb2312\"")
+				|| header.contains("charset='gb2312'")) {
+			html = getHtml(url, sokTimeout, "gb2312");
+		}
+
+		return html;
+	}
+
 	static void closeConnection(HttpEntity entity) throws IOException {
 		if (entity != null)
 			EntityUtils.consume(entity);
@@ -175,7 +194,7 @@ public class HtmlFetcher {
 
 	}
 
-	public static String getHtmlSource(HttpResponse response) throws Exception {
+	public static String getHtmlSource(HttpResponse response, String encodingType) throws Exception {
 
 		String htmlResult = null;
 		HttpEntity entity = null;
@@ -183,21 +202,21 @@ public class HtmlFetcher {
 		entity = response.getEntity();
 		if (entity != null) {
 			instream = entity.getContent();
-			String encodingType = "UTF-8";
-			try {
-				encodingType = EntityUtils.getContentCharSet(entity);
-				if (encodingType == null) {
-					encodingType = "UTF-8";
-				}
-
-			} catch (Exception e) {
-
-				if (logger.isDebugEnabled()) {
-					logger.debug("Unable to get charset for: ");
-					logger.debug("Encoding Type is: " + encodingType);
-				}
-				throw e;
-			}
+//			String encodingType = "UTF-8";
+//			try {
+//				encodingType = EntityUtils.getContentCharSet(entity);
+//				if (encodingType == null) {
+//					encodingType = "UTF-8";
+//				}
+//
+//			} catch (Exception e) {
+//
+//				if (logger.isDebugEnabled()) {
+//					logger.debug("Unable to get charset for: ");
+//					logger.debug("Encoding Type is: " + encodingType);
+//				}
+//				throw e;
+//			}
 
 			try {
 				htmlResult = HtmlFetcher.convertStreamToString(instream,
@@ -251,7 +270,7 @@ public class HtmlFetcher {
 
 			} else if (statusCode >= 200 && statusCode <= 202) {
 
-				htmlContent = getHtmlSource(response);
+				htmlContent = getHtmlSource(response, "utf-8");
 				if (htmlContent != null) {
 					// check whether meta tag is present or not
 					String finalUrl = httpRedirect.doGet(redirectedUrl,

@@ -1,3 +1,5 @@
+import org.apache.commons.lang.builder.EqualsBuilder;
+
 import java.util.HashSet;
 
 /**
@@ -23,6 +25,19 @@ public class KeywordNode {
     @Override
     public int hashCode() {
         return this.query.hashCode();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof KeywordNode))
+            return false;
+        if (obj == this)
+            return true;
+
+        KeywordNode rhs = (KeywordNode) obj;
+        return new EqualsBuilder().
+                append(hashCode(), rhs.hashCode()).
+                isEquals();
     }
 
     public void addChild(KeywordNode child) {

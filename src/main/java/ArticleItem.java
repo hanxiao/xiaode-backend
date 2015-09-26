@@ -1,3 +1,4 @@
+import com.sree.textbytes.network.HtmlFetcher;
 import com.sree.textbytes.readabilityBUNDLE.Article;
 import com.sree.textbytes.readabilityBUNDLE.ContentExtractor;
 import org.apache.commons.lang.builder.EqualsBuilder;
@@ -31,44 +32,8 @@ public class ArticleItem implements Serializable {
         this.sourceLink = sourceLink;
 
         ContentExtractor ce = new ContentExtractor();
-
-        String html = null;
-        URLConnection connection = null;
-        try {
-            connection =  new URL(sourceLink).openConnection();
-            Scanner scanner = new Scanner(connection.getInputStream(), "utf-8");
-            scanner.useDelimiter("\\Z");
-            html = scanner.next();
-        } catch ( Exception ex ) {
-            ex.printStackTrace();
-        }
-        String header = html.substring(0,1000).toLowerCase();
-        if (header.contains("charset=gbk")
-                || header.contains("charset=\"gbk\"")
-                || header.contains("charset='gbk'")) {
-            LOG.info("{} is in GBK", sourceLink);
-            try {
-                connection =  new URL(sourceLink).openConnection();
-                Scanner scanner = new Scanner(connection.getInputStream(), "gbk");
-                scanner.useDelimiter("\\Z");
-                html = scanner.next();
-            } catch ( Exception ex ) {
-                ex.printStackTrace();
-            }
-        } else if (header.contains("charset=gb2312")
-                || header.contains("charset=\"gb2312\"")
-                || header.contains("charset='gb2312'")) {
-            LOG.info("{} is in GB2312", sourceLink);
-            try {
-                connection =  new URL(sourceLink).openConnection();
-                Scanner scanner = new Scanner(connection.getInputStream(), "gb2312");
-                scanner.useDelimiter("\\Z");
-                html = scanner.next();
-            } catch ( Exception ex ) {
-                ex.printStackTrace();
-            }
-        }
-
+        HtmlFetcher htmlFetcher = new HtmlFetcher();
+        String html = htmlFetcher.getHtml(sourceLink, 5000);
 
         Article article = ce.extractContent(html, "ReadabilitySnack");
         this.imageUrl = article.getTopImage().getImageSrc();

@@ -22,7 +22,8 @@ import java.util.List;
 public class FeedItem implements Serializable {
     private static transient final Logger LOG = LoggerFactory.getLogger(FeedItem.class);
 
-    public final String keyword;
+    public final String feedName;
+    public final String query;
     public final long createTime;
     public long lastUpdateTime;
     public final String creator;
@@ -32,14 +33,15 @@ public class FeedItem implements Serializable {
 
     private URL feedUrl;
 
-    public FeedItem(String keyword, String creator) {
+    public FeedItem(KeywordNode keywordNode, String creator) {
         this.creator = creator;
         this.lastUpdateTime = 0;
         this.createTime = System.currentTimeMillis();
-        this.keyword = keyword;
+        this.feedName = keywordNode.name;
+        this.query = keywordNode.query;
         try {
             String urlPattern = "https://news.google.com/news/section?cf=all&ned=us&hl=en&q=#QUERY&output=rss";
-            this.feedUrl = new URL(urlPattern.replace("#QUERY", URLEncoder.encode(keyword, "UTF-8")));
+            this.feedUrl = new URL(urlPattern.replace("#QUERY", URLEncoder.encode(this.query, "UTF-8")));
         } catch (Exception ex) {
             ex.printStackTrace();
         }
@@ -57,11 +59,11 @@ public class FeedItem implements Serializable {
                 SyndFeed feed = input.build(new XmlReader(feedUrl));
                 List<SyndEntry> allFeeds = feed.getEntries();
                 for (SyndEntry sf : allFeeds) {
-                    StoryItem storyItem = new StoryItem(keyword, sf);
+                    StoryItem storyItem = new StoryItem(feedName, sf);
                     if (storyItem != null) {
                         allStories.add(storyItem);
                     }
-                    LOG.info("New post {} is added to {}!", storyItem.title, keyword);
+                    LOG.info("New post {} is added to {}!", storyItem.title, feedName);
                 }
             }
             catch (IOException exception) {
@@ -72,7 +74,7 @@ public class FeedItem implements Serializable {
             }
             this.lastUpdateTime = System.currentTimeMillis();
         } else {
-            LOG.info("This keyword has been updated {} mins ago.", (double)timeDiff / UpdateInterval.HOUR.getNumVal());
+            LOG.info("This feedName has been updated {} mins ago.", (double)timeDiff / UpdateInterval.HOUR.getNumVal());
         }
 
 

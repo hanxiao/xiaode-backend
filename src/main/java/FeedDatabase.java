@@ -14,8 +14,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FeedDatabase implements Serializable {
     private static transient final Logger LOG = LoggerFactory.getLogger(FeedDatabase.class);
     private HashMap<String, User> allUsers = new HashMap<String, User>();
-    private HashMap<String, FeedItem> allKeywords = new HashMap<String, FeedItem>();
-    private transient int nrOfThreads = Runtime.getRuntime().availableProcessors();
+    private HashMap<KeywordNode, FeedItem> allFeeds = new HashMap<KeywordNode, FeedItem>();
+    private int nrOfThreads = 4 * Runtime.getRuntime().availableProcessors();
 
     public void saveFile(final File model) {
         try {
@@ -34,7 +34,7 @@ public class FeedDatabase implements Serializable {
 
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(model)));
             FeedDatabase mat = (FeedDatabase) in.readObject();
-            mat.nrOfThreads = 4 * Runtime.getRuntime().availableProcessors();
+            mat.nrOfThreads = Runtime.getRuntime().availableProcessors();
             in.close();
             return mat;
 
@@ -54,25 +54,20 @@ public class FeedDatabase implements Serializable {
     }
 
 
-    private void addKeyword(FeedItem feedItem) {
-        allKeywords.put(feedItem.keyword, feedItem);
-    }
-
-
-    public void addKeyword(String keyword, String user) {
+    public void addKeyword(KeywordNode keywordNode, String user) {
         if (!allUsers.containsKey(user)) {
             allUsers.put(user, new User(user));
         }
-        allUsers.get(user).keywords.add(keyword);
+        allUsers.get(user).keywordNodes.add(keywordNode);
 
-        if (!allKeywords.containsKey(keyword)) {
-            allKeywords.put(keyword, new FeedItem(keyword, user));
+        if (!allFeeds.containsKey(keywordNode)) {
+            allFeeds.put(keywordNode, new FeedItem(keywordNode, user));
         }
-        allKeywords.get(keyword).followers.add(user);
+        allFeeds.get(keywordNode).followers.add(user);
     }
 
     public void traverseKeyword(KeywordNode keywordNode, String user) {
-        addKeyword(keywordNode.query, user);
+        addKeyword(keywordNode, user);
         LOG.info("Keyword: {} with query {} is added by user {}", keywordNode.name, keywordNode.query, user);
         if (keywordNode.children != null) {
             for (KeywordNode child : keywordNode.children) {
@@ -84,7 +79,7 @@ public class FeedDatabase implements Serializable {
     public void updateAll() {
         ExecutorService executor = Executors.newFixedThreadPool(nrOfThreads);
         final AtomicInteger nrOfJobs = new AtomicInteger(0);
-        for (final FeedItem feedItem : allKeywords.values()) {
+        for (final FeedItem feedItem : allFeeds.values()) {
 
             while (nrOfJobs.get() > nrOfThreads) {
                 try {
@@ -100,10 +95,11 @@ public class FeedDatabase implements Serializable {
                     for (String usr: feedItem.followers) {
                         touchUser(usr);
                     }
-                    LOG.info("{} is updated", feedItem.keyword);
+                    LOG.info("{} is updated", feedItem.feedName);
                     nrOfJobs.decrementAndGet();
                 }
             });
+
         }
 
         executor.shutdown();
