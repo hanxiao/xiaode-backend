@@ -14,10 +14,6 @@ public class Main {
 
     private static transient final Logger LOG = LoggerFactory.getLogger(Main.class);
 
-    //java -jar -Xmx30g q20test.jar --numTest 2000 --numQuery 200 --random --models testlist.txt
-    @Option(name = "--db", required = true, usage = "Filename for saving and loading database")
-    File dbFile;
-
     @Option(name = "--json", required = false, usage = "Filename for saving json file")
     File dbJson;
 

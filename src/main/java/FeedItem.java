@@ -53,7 +53,7 @@ public class FeedItem implements Serializable {
 
     public void update() {
         long timeDiff = System.currentTimeMillis() - lastUpdateTime;
-        if (lastUpdateTime == 0 || timeDiff > UpdateInterval.HOUR.getNumVal()) {
+        if (lastUpdateTime == 0 || timeDiff > (UpdateInterval.HOUR.getNumVal() / 2)) {
             try {
                 SyndFeedInput input = new SyndFeedInput();
                 SyndFeed feed = input.build(new XmlReader(feedUrl));
@@ -74,7 +74,7 @@ public class FeedItem implements Serializable {
             }
             this.lastUpdateTime = System.currentTimeMillis();
         } else {
-            LOG.info("This feedName has been updated {} mins ago.", (double)timeDiff / UpdateInterval.HOUR.getNumVal());
+            LOG.info("This feedName has been updated {} hour ago.", (double)timeDiff / UpdateInterval.HOUR.getNumVal());
         }
 
 
