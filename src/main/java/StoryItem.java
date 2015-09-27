@@ -76,7 +76,9 @@ public class StoryItem implements Serializable {
                         articleItem = new ArticleItem(null, null, this_link);
                     }
 
-                    if (articleItem.imageUrl != null && !articleItem.imageUrl.trim().isEmpty()) {
+                    if (articleItem.imageUrl != null
+                            && !articleItem.imageUrl.trim().isEmpty()
+                            && !articleItem.imageUrl.contains("logo")) {
                         images.add(articleItem.imageUrl);
                     }
 
