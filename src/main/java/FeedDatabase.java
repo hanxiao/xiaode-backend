@@ -14,7 +14,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FeedDatabase implements Serializable {
     private static transient final Logger LOG = LoggerFactory.getLogger(FeedDatabase.class);
     private HashMap<String, User> allUsers = new HashMap<String, User>();
-    private HashMap<KeywordNode, FeedItem> allFeeds = new HashMap<KeywordNode, FeedItem>();
+    private HashMap<String, FeedItem> allFeeds = new HashMap<String, FeedItem>();
     private int nrOfThreads = 4 * Runtime.getRuntime().availableProcessors();
 
     public void saveFile(final File model) {
@@ -60,10 +60,10 @@ public class FeedDatabase implements Serializable {
         }
         allUsers.get(user).keywordNodes.add(keywordNode);
 
-        if (!allFeeds.containsKey(keywordNode)) {
-            allFeeds.put(keywordNode, new FeedItem(keywordNode, user));
+        if (!allFeeds.containsKey(keywordNode.query)) {
+            allFeeds.put(keywordNode.query, new FeedItem(keywordNode, user));
         }
-        allFeeds.get(keywordNode).followers.add(user);
+        allFeeds.get(keywordNode.query).followers.add(user);
     }
 
     public void traverseKeyword(KeywordNode keywordNode, String user) {
