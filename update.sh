@@ -1,5 +1,6 @@
 #!/bin/bash
 HOME=/home/han
+set -e
 AGENT="ssh-agent -s"
 if [ ! -d $HOME/.ssh/agent ]; then
         mkdir -p $HOME/.ssh/agent
@@ -12,7 +13,9 @@ if [ -z "$pid" ]; then
         $AGENT | grep -v echo > $HOME/.ssh/agent/$HOST & pid=$!
         sleep 1 # Let it fork and stuff
 fi
-ssh-add $HOME/.ssh/id_dsa
+ssh-add $HOME/.ssh/id_rsa
+ssh-add -l
+ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
 /usr/bin/java -jar /home/han/Documents/xiaode-backend/target/xiaode.jar --json /home/han/Documents/xiaode-backend/database.json --kw /home/han/Documents/xiaode-backend/keywords.json
 cd /home/han/Documents/xiaode-backend/
 /usr/bin/git add database.json
