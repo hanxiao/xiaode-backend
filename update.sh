@@ -13,10 +13,6 @@ if [ -z "$pid" ]; then
         sleep 1 # Let it fork and stuff
 fi
 ssh-add $HOME/.ssh/id_dsa
-#
-# Get our parent to pick up the required SSH env vars.
-#
-. $HOME/.ssh/agent/$HOST
 /usr/bin/java -jar /home/han/Documents/xiaode-backend/target/xiaode.jar --json /home/han/Documents/xiaode-backend/database.json --kw /home/han/Documents/xiaode-backend/keywords.json
 cd /home/han/Documents/xiaode-backend/
 /usr/bin/git add database.json
