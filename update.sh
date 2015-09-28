@@ -16,7 +16,9 @@ fi
 ssh-add $HOME/.ssh/id_rsa
 ssh-add -l
 ssh-keyscan -t rsa github.com >> ~/.ssh/known_hosts
+source $HOME/.keychain/${HOSTNAME}-sh
 /usr/bin/java -jar /home/han/Documents/xiaode-backend/target/xiaode.jar --json /home/han/Documents/xiaode-backend/database.json --kw /home/han/Documents/xiaode-backend/keywords.json
+/home/han/Documents/xiaode-backend/nohup.out
 cd /home/han/Documents/xiaode-backend/
 /usr/bin/git add database.json
 /usr/bin/git add keywords.json
