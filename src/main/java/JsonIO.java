@@ -18,7 +18,7 @@ public class JsonIO {
     private static transient final Logger LOG = LoggerFactory.getLogger(JsonIO.class);
 
     public static void database2Json(FeedDatabase feedDatabase, File outFile) {
-        Gson gson = new GsonBuilder().setPrettyPrinting()
+        Gson gson = new GsonBuilder()
                 .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
         String jsonOutput = gson.toJson(feedDatabase);
 
@@ -33,7 +33,7 @@ public class JsonIO {
     }
 
     public static void keywordTree2Json(KeywordNode keywordNode, File outFile) {
-        Gson gson = new GsonBuilder().setPrettyPrinting()
+        Gson gson = new GsonBuilder()
                 .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
         String jsonOutput = gson.toJson(keywordNode);
 
@@ -48,7 +48,7 @@ public class JsonIO {
     }
 
     public static KeywordNode json2KeywordTree(File inFile) {
-        Gson gson = new GsonBuilder().setPrettyPrinting()
+        Gson gson = new GsonBuilder()
                 .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
         KeywordNode keywordNode = null;
         try {
@@ -61,7 +61,7 @@ public class JsonIO {
     }
 
     public static FeedDatabase json2Database(File inFile) {
-        Gson gson = new GsonBuilder().setPrettyPrinting()
+        Gson gson = new GsonBuilder()
                 .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
         FeedDatabase feedDatabase = null;
         try {
