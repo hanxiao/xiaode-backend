@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.net.URL;
 import java.net.URLConnection;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -19,7 +20,37 @@ public class ArticleItem implements Serializable {
     String imageUrl;
     String mainContent;
     String sourceLink;
+    double posFactor = 0;
+    double negFactor = 0;
 
+    public void sentimentAnalysis(List<String> posWords, List<String> negWords) {
+        posFactor = 0;
+        negFactor = 0;
+        posWords.stream().filter(pos -> mainContent != null && mainContent.length() > 0).forEach(pos -> {
+            posFactor += mainContent.contains(pos) ? 1 : 0;
+        });
+        negWords.stream().filter(neg -> mainContent != null && mainContent.length() > 0).forEach(neg -> {
+            negFactor += mainContent.contains(neg) ? 1 : 0;
+        });
+
+    }
+
+    public void normalizeScore(double posAvg, double negAvg, double posStd, double negStd) {
+        posFactor = (posFactor - posAvg) / posStd;
+        negFactor = (negFactor - negAvg) / negStd;
+    }
+
+    public ArticleItem(ArticleItem articleItem) {
+        this.imageUrl = articleItem.imageUrl;
+        this.mainContent = articleItem.mainContent;
+        this.sourceLink = articleItem.sourceLink;
+        this.posFactor = articleItem.posFactor;
+        this.negFactor = articleItem.negFactor;
+    }
+
+    public ArticleItem copy(){
+        return new ArticleItem(this);
+    }
 
     public ArticleItem(String imageUrl, String mainContent, String sourceLink) {
         this.imageUrl = imageUrl;

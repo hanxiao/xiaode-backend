@@ -1,4 +1,6 @@
 import com.rometools.rome.feed.synd.SyndEntry;
+import com.sree.textbytes.StringHelpers.HashUtils;
+import com.sree.textbytes.readabilityBUNDLE.Article;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -7,6 +9,7 @@ import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import utils.ChineseTrans;
+import utils.EditDistance;
 
 import java.io.Serializable;
 import java.text.DateFormat;
@@ -21,16 +24,53 @@ public class StoryItem implements Serializable {
     private static transient final Logger LOG = LoggerFactory.getLogger(StoryItem.class);
 
     public int id;
+
     public String keyword;
     public String title;
     public String summary;
     public HashSet<String> images;
     public long publishTime;
+
+    public String getPublishDate() {
+        return publishDate;
+    }
+
     public String publishDate;
     public HashSet<ArticleItem> sourceArticles;
     public String author;
     public int numViews;
     public transient ChineseTrans chineseTrans;
+
+
+    public String getKeyword() {
+        return keyword;
+    }
+
+    public StoryItem copy() {
+        return new StoryItem(this);
+    }
+
+    public StoryItem(StoryItem storyItem) {
+        this.id = storyItem.id;
+        this.keyword = storyItem.keyword;
+        this.title = storyItem.title;
+        this.summary = storyItem.summary;
+        if (storyItem.images == null) {
+            this.images = null;
+        } else {
+            this.images = new HashSet<String>();
+            this.images.addAll(storyItem.images);
+        }
+        this.publishDate = storyItem.publishDate;
+        this.publishTime = storyItem.publishTime;
+        this.author = storyItem.author;
+        this.numViews = storyItem.numViews;
+        this.chineseTrans = storyItem.chineseTrans;
+        this.sourceArticles = new HashSet<ArticleItem>();
+        for (ArticleItem articleItem : storyItem.sourceArticles) {
+            this.sourceArticles.add(articleItem.copy());
+        }
+    }
 
 
     public StoryItem(String keyword, SyndEntry sf) {
@@ -150,4 +190,38 @@ public class StoryItem implements Serializable {
                 isEquals();
     }
 
+    public static boolean isSimilar(StoryItem a, StoryItem b) {
+        if (a.equals(b)) {
+            return true;
+        } else {
+            if (EditDistance.sim(a.title, b.title) > 0.7) {
+                LOG.info("{} and {} are very similar", a.title, b.title);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void mergeWith(StoryItem storyItem) {
+        this.title = storyItem.title.length() > this.title.length()
+                ? storyItem.title : this.title;
+        this.id = this.hashCode();
+        this.summary = storyItem.summary.length() > this.summary.length()
+                ? storyItem.summary : this.summary;
+        if (storyItem.images != null) {
+            if (this.images == null) {
+                this.images = new HashSet<String>();
+            }
+            this.images.addAll(storyItem.images);
+        }
+        this.publishTime = storyItem.publishTime < this.publishTime
+                ? storyItem.publishTime : this.publishTime;
+        DateFormat df = new SimpleDateFormat("yyyyMMdd");
+        this.publishDate = df.format(this.publishTime);
+        this.author = storyItem.author.length() > this.author.length()
+                ? storyItem.author : this.author;
+        for (ArticleItem articleItem : storyItem.sourceArticles) {
+            this.sourceArticles.add(articleItem.copy());
+        }
+    }
 }

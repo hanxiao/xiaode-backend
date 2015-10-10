@@ -1,12 +1,19 @@
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import org.jsoup.select.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import utils.CollectionAdapter;
 
 import java.io.*;
-import java.util.HashMap;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * Created by han on 8/15/15.
@@ -14,8 +21,16 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FeedDatabase implements Serializable {
     private static transient final Logger LOG = LoggerFactory.getLogger(FeedDatabase.class);
     private HashMap<String, User> allUsers = new HashMap<String, User>();
+
+    public HashMap<String, FeedItem> getAllFeeds() {
+        return allFeeds;
+    }
+
     private HashMap<String, FeedItem> allFeeds = new HashMap<String, FeedItem>();
     private int nrOfThreads = 4 * Runtime.getRuntime().availableProcessors();
+
+
+
 
     public void saveFile(final File model) {
         try {
