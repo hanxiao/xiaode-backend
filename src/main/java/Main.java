@@ -74,10 +74,10 @@ public class Main {
         }
 
         feedDatabase.traverseKeyword(keywordNode, "Han");
-        JsonIO.writePeriodStories(feedDatabase);
 
         feedDatabase.updateAll();
         JsonIO.database2Json(feedDatabase, dbJson);
+        JsonIO.writePeriodStories(feedDatabase);
 
 //        feedDatabase.saveFile(new File("database.bin"));
     }
