@@ -1,9 +1,6 @@
 #!/bin/bash
 HOME=/home/han
-set -e
-source $HOME/.keychain/${HOSTNAME}-sh
 /usr/bin/java -jar /home/han/Documents/xiaode-backend/target/xiaode.jar --json /home/han/Documents/xiaode-backend/database.json --kw /home/han/Documents/xiaode-backend/keywords.json
-/home/han/Documents/xiaode-backend/nohup.out
 cp /home/han/Documents/xiaode-backend/*.json /home/han/Documents/hanxiao.github.io/data/
 cd /home/han/Documents/hanxiao.github.io/
 /usr/bin/git add data/database.json
