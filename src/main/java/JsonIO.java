@@ -89,20 +89,20 @@ public class JsonIO {
         tmpStoriesUnique.stream().flatMap(p -> p.sourceArticles.stream())
                 .forEach(p -> p.normalizeScore(posAvg, negAvg, posStd, negStd));
 
-        Map<String, Map<String, Double>> posChart =  tmpStoriesUnique.stream()
-                .collect(Collectors.groupingBy(StoryItem::getKeyword ,
-                        Collectors.groupingBy(StoryItem::getPublishDate,
-                                Collectors.averagingDouble(p ->
-                                        p.sourceArticles.stream().mapToDouble(j -> j.posFactor)
-                                                .average().getAsDouble()))));
-
-
-        Map<String, Map<String, Double>> negChart =  tmpStoriesUnique.stream()
-                .collect(Collectors.groupingBy(StoryItem::getKeyword,
-                        Collectors.groupingBy(StoryItem::getPublishDate,
-                                Collectors.averagingDouble(p ->
-                                        p.sourceArticles.stream().mapToDouble(j -> j.negFactor)
-                                                .average().getAsDouble()))));
+//        Map<String, Map<String, Double>> posChart =  tmpStoriesUnique.stream()
+//                .collect(Collectors.groupingBy(StoryItem::getKeyword ,
+//                        Collectors.groupingBy(StoryItem::getPublishDate,
+//                                Collectors.averagingDouble(p ->
+//                                        p.sourceArticles.stream().mapToDouble(j -> j.posFactor)
+//                                                .average().getAsDouble()))));
+//
+//
+//        Map<String, Map<String, Double>> negChart =  tmpStoriesUnique.stream()
+//                .collect(Collectors.groupingBy(StoryItem::getKeyword,
+//                        Collectors.groupingBy(StoryItem::getPublishDate,
+//                                Collectors.averagingDouble(p ->
+//                                        p.sourceArticles.stream().mapToDouble(j -> j.negFactor)
+//                                                .average().getAsDouble()))));
 
         writeNDaysBefore(new File("database-3days.json"), tmpStoriesUnique, 3);
         writeNDaysBefore(new File("database-week.json"), tmpStoriesUnique, 7);

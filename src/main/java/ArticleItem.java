@@ -5,6 +5,10 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.imageio.ImageIO;
+import java.awt.*;
+import java.awt.image.PackedColorModel;
+import java.awt.image.RenderedImage;
 import java.io.Serializable;
 import java.net.URL;
 import java.net.URLConnection;
@@ -22,6 +26,8 @@ public class ArticleItem implements Serializable {
     String sourceLink;
     double posFactor = 0;
     double negFactor = 0;
+    double imgSize;
+    double imgRatio;
 
     public void sentimentAnalysis(List<String> posWords, List<String> negWords) {
         posFactor = 0;
@@ -67,10 +73,23 @@ public class ArticleItem implements Serializable {
         String html = htmlFetcher.getHtml(sourceLink, 5000);
 
         Article article = ce.extractContent(html, "ReadabilitySnack");
-        this.imageUrl = article.getTopImage().getImageSrc();
+        imageUrl = article.getTopImage().getImageSrc();
+        if (imageUrl != null) {
+            imageUrl =
+                    (imageUrl.startsWith("http")
+                            && !imageUrl.contains("logo")
+                            && imageUrl.trim().length() > 0) ? this.imageUrl : null;
+        }
         if (this.imageUrl != null) {
-            this.imageUrl =
-                    this.imageUrl.startsWith("http") ? this.imageUrl : null;
+            URL url = new URL(this.imageUrl);
+            RenderedImage img = ImageIO.read(url);
+            imgRatio = (double)img.getWidth()/ img.getHeight();
+            if (imgRatio < 1.1 && imgRatio > 0.9) {
+                LOG.warn("Image is probably a logo or QR code!");
+                imageUrl = null;
+            } else {
+                imgSize = img.getWidth() *  img.getHeight();
+            }
         }
         this.mainContent = article.getCleanedArticleText();
     }

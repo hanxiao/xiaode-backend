@@ -29,6 +29,7 @@ public class StoryItem implements Serializable {
     public String title;
     public String summary;
     public HashSet<String> images;
+    public String mainImage;
     public long publishTime;
 
     public String getPublishDate() {
@@ -70,6 +71,7 @@ public class StoryItem implements Serializable {
         for (ArticleItem articleItem : storyItem.sourceArticles) {
             this.sourceArticles.add(articleItem.copy());
         }
+        this.mainImage = storyItem.mainImage;
     }
 
 
@@ -102,6 +104,7 @@ public class StoryItem implements Serializable {
         Document doc = Jsoup.parse(org_content);
         Elements links = doc.select("a[href]");
 
+        double maxSize = 0;
         for (Element link : links) {
             if (link.attr("abs:href").matches(".*url=.*")) {
                 String this_link = link.attr("abs:href").replaceAll(".*?url=", "").trim();
@@ -116,11 +119,12 @@ public class StoryItem implements Serializable {
                         articleItem = new ArticleItem(null, null, this_link);
                     }
 
-                    if (articleItem.imageUrl != null
-                            && !articleItem.imageUrl.trim().isEmpty()
-                            && !articleItem.imageUrl.toLowerCase().contains("logo")) {
+                    if (articleItem.imageUrl != null) {
                         images.add(articleItem.imageUrl);
-                    }
+                        if (articleItem.imgSize > maxSize) {
+                            mainImage = articleItem.imageUrl;
+                        }
+                     }
 
                     if (articleItem.mainContent != null) {
                         articleItem.mainContent = chineseTrans.normalizeCAP(
