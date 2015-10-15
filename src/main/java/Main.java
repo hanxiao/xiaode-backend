@@ -76,8 +76,8 @@ public class Main {
         feedDatabase.traverseKeyword(keywordNode, "Han");
 
         feedDatabase.updateAll();
-        JsonIO.database2Json(feedDatabase, dbJson);
         JsonIO.writePeriodStories(feedDatabase);
+        JsonIO.database2Json(feedDatabase, dbJson);
 
 //        feedDatabase.saveFile(new File("database.bin"));
     }

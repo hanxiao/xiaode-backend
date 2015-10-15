@@ -4,6 +4,7 @@ import org.apache.commons.io.FileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import utils.CollectionAdapter;
+import utils.LZString;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -31,6 +32,16 @@ public class JsonIO {
                 .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
         String jsonOutput = gson.toJson(day7Stories);
 
+        writeToFile(outFile, jsonOutput);
+
+        LOG.info("Compressing...");
+        String jsonCompressed = LZString.compressToEncodedURIComponent(jsonOutput);
+
+        writeToFile(new File(outFile.getName() + ".lz"), jsonCompressed);
+
+    }
+
+    private static void writeToFile (File outFile, String jsonOutput) {
         try {
             PrintWriter writer = new PrintWriter(new FileOutputStream(outFile, false));
             writer.println(jsonOutput);
@@ -114,14 +125,12 @@ public class JsonIO {
                 .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
         String jsonOutput = gson.toJson(feedDatabase);
 
-        try {
-            PrintWriter writer = new PrintWriter(new FileOutputStream(outFile, false));
-            writer.println(jsonOutput);
-            writer.flush();
-            writer.close();
-        } catch (IOException ex) {
-            LOG.error("Could not save Database {}", outFile, ex);
-        }
+        writeToFile(outFile, jsonOutput);
+        LOG.info("Compressing...");
+        String jsonCompressed = LZString.compressToEncodedURIComponent(jsonOutput);
+
+        writeToFile(new File(outFile.getName() + ".lz"), jsonCompressed);
+
     }
 
     public static void keywordTree2Json(KeywordNode keywordNode, File outFile) {

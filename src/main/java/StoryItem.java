@@ -1,6 +1,4 @@
 import com.rometools.rome.feed.synd.SyndEntry;
-import com.sree.textbytes.StringHelpers.HashUtils;
-import com.sree.textbytes.readabilityBUNDLE.Article;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
@@ -198,7 +196,7 @@ public class StoryItem implements Serializable {
         if (a.equals(b)) {
             return true;
         } else {
-            if (EditDistance.sim(a.title, b.title) > 0.7) {
+            if (EditDistance.sim(a.title, b.title) > 0.55) {
                 LOG.info("{} and {} are very similar", a.title, b.title);
                 return true;
             }
