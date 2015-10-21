@@ -70,8 +70,8 @@ public class ArticleItem implements Serializable {
         String middleUrl = "";
 
         for (String aSubInfo : subInfo) {
-            middleUrl += aSubInfo;
-            String candidateUrl = info[0] + middleUrl + urlSuffix;
+            middleUrl += aSubInfo + "/";
+            String candidateUrl = info[0] +"://" + middleUrl + urlSuffix;
             try {
                 URL url = new URL(candidateUrl);
                 RenderedImage img = ImageIO.read(url);
