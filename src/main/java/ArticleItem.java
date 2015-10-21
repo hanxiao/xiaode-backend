@@ -6,14 +6,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
-import java.awt.*;
-import java.awt.image.PackedColorModel;
 import java.awt.image.RenderedImage;
 import java.io.Serializable;
 import java.net.URL;
-import java.net.URLConnection;
 import java.util.List;
-import java.util.Scanner;
 
 /**
  * Created by hxiao on 15/9/24.
@@ -64,6 +60,30 @@ public class ArticleItem implements Serializable {
         this.sourceLink = sourceLink;
     }
 
+
+    private String completeImageUrl(String imageUrlSuffix) {
+        String urlSuffix = imageUrlSuffix.startsWith("/") ?
+                imageUrlSuffix.substring(1, imageUrlSuffix.length()) :
+                imageUrlSuffix;
+        String [] info = sourceLink.split("://");
+        String [] subInfo = info[1].split("/");
+        String middleUrl = "";
+
+        for (String aSubInfo : subInfo) {
+            middleUrl += aSubInfo;
+            String candidateUrl = info[0] + middleUrl + urlSuffix;
+            try {
+                URL url = new URL(candidateUrl);
+                RenderedImage img = ImageIO.read(url);
+                if (img != null) {
+                    return candidateUrl;
+                }
+            } catch (Exception ignored) {
+            }
+        }
+        return null;
+    }
+
     public ArticleItem(String sourceLink) throws Exception {
 
         this.sourceLink = sourceLink;
@@ -75,10 +95,14 @@ public class ArticleItem implements Serializable {
         Article article = ce.extractContent(html, "ReadabilitySnack");
         imageUrl = article.getTopImage().getImageSrc();
         if (imageUrl != null) {
-            imageUrl =
-                    (imageUrl.startsWith("http")
-                            && !imageUrl.contains("logo")
-                            && imageUrl.trim().length() > 0) ? this.imageUrl : null;
+            if (!imageUrl.startsWith("http")) {
+                imageUrl = completeImageUrl(imageUrl);
+            } else {
+                imageUrl = (!imageUrl.contains("logo")
+                        && imageUrl.trim().length() > 0) ?
+                        this.imageUrl : null;
+            }
+
         }
         if (this.imageUrl != null) {
             URL url = new URL(this.imageUrl);

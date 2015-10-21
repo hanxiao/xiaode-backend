@@ -24,7 +24,7 @@ public class KeywordNode {
 
     @Override
     public int hashCode() {
-        return this.query.hashCode();
+        return Math.abs(this.query.hashCode());
     }
 
     @Override

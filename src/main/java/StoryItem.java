@@ -175,7 +175,7 @@ public class StoryItem implements Serializable {
 
     @Override
     public int hashCode() {
-        return this.title.hashCode();
+        return Math.abs(this.title.hashCode());
     }
 
 

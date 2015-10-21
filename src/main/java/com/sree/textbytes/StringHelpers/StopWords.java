@@ -107,7 +107,7 @@ public class StopWords
   }
   
   public Set<String> getStopWords() {
-	  return this.STOP_WORDS;
+	  return STOP_WORDS;
   }
   
   public static String removeStopWords(String str) {

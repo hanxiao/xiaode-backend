@@ -1,19 +1,12 @@
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.jsoup.select.Collector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import utils.CollectionAdapter;
 
 import java.io.*;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.HashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 /**
  * Created by han on 8/15/15.
