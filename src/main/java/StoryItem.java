@@ -21,6 +21,10 @@ public class StoryItem implements Serializable {
 
     private static transient final Logger LOG = LoggerFactory.getLogger(StoryItem.class);
 
+    public int getIdByGroup() {
+        return Math.abs(id % 10);
+    }
+
     public int id;
 
     public String keyword;
@@ -226,4 +230,5 @@ public class StoryItem implements Serializable {
             this.sourceArticles.add(articleItem.copy());
         }
     }
+
 }

@@ -72,11 +72,13 @@ public class Main {
             LOG.info("No feeds database found! Generate from scratch!");
             feedDatabase = new FeedDatabase();
         }
+        // put write here only for debug
+        JsonIO.writeStoriesData(feedDatabase);
 
         feedDatabase.traverseKeyword(keywordNode, "Han");
 
         feedDatabase.updateAll();
-        JsonIO.writePeriodStories(feedDatabase);
+        JsonIO.writeStoriesData(feedDatabase);
         JsonIO.database2Json(feedDatabase, dbJson);
 
 //        feedDatabase.saveFile(new File("database.bin"));
@@ -84,7 +86,7 @@ public class Main {
 
 
     public KeywordNode generateKeywordTree() {
-        KeywordNode categoryNode = new KeywordNode("欧洲", "经济");
+        KeywordNode categoryNode = new KeywordNode("全球", "经济");
         categoryNode.addChild(new KeywordNode("英国"));
         categoryNode.addChild(new KeywordNode("德国"));
         categoryNode.addChild(new KeywordNode("芬兰"));
@@ -105,7 +107,7 @@ public class Main {
         categoryNode.addChild(new KeywordNode("葡萄牙"));
         categoryNode.addChild(new KeywordNode("欧元区"));
         categoryNode.addChild(new KeywordNode("欧洲央行"));
-
+        categoryNode.addChild(new KeywordNode("美国"));
         JsonIO.keywordTree2Json(categoryNode, new File("keywords.json"));
         return categoryNode;
     }
