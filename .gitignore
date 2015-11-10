@@ -46,7 +46,7 @@ crashlytics.properties
 crashlytics-build.properties.idea
 
 *.json.lz
-database-*.json
+database*.json
 *.log
 
 testLZ
