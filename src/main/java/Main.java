@@ -73,7 +73,7 @@ public class Main {
             feedDatabase = new FeedDatabase();
         }
         // put write here only for debug
-        JsonIO.writeStoriesData(feedDatabase);
+//        JsonIO.writeStoriesData(feedDatabase);
 
         feedDatabase.traverseKeyword(keywordNode, "Han");
 

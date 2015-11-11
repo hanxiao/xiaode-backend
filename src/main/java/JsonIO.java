@@ -1,23 +1,15 @@
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.io.FileUtils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.impl.client.DefaultHttpClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import utils.CollectionAdapter;
 import utils.LZString;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
-import java.awt.image.renderable.RenderableImage;
-import java.io.*;
-import java.net.MalformedURLException;
-import java.net.URI;
-import java.net.URISyntaxException;
-import java.net.URL;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -130,32 +122,32 @@ public class JsonIO {
         Map<Integer, List<StoryItem>> storyGroup =
         tmpStoriesUnique.stream().collect(Collectors.groupingBy(StoryItem::getIdByGroup));
 
-        List<String> sourceLinksUnique =
-                tmpStoriesUnique.stream().flatMap(p -> p.sourceArticles.stream())
-                .map(p -> p.sourceLink).collect(Collectors.toList());
+//        List<String> sourceLinksUnique =
+//                tmpStoriesUnique.stream().flatMap(p -> p.sourceArticles.stream())
+//                .map(p -> p.sourceLink).collect(Collectors.toList());
 
-        HashMap<String, String> domainFavIcons = new HashMap<>();
-        for (String sourceLink : sourceLinksUnique) {
-            try {
-                URI tmpUri = new URI(sourceLink);
-                String hostName = tmpUri.getHost();
-                if (!domainFavIcons.containsKey(hostName)) {
-                    LOG.info("Downloading {} favicon ...", hostName );
-                    BufferedImage img = ImageIO.read(new URL("https://www.google.com/s2/favicons?domain_url=" + hostName));
-                    ByteArrayOutputStream os = new ByteArrayOutputStream();
-                    ImageIO.write(img, "png", Base64.getEncoder().wrap(os));
-                    domainFavIcons.put(hostName, os.toString("UTF-8"));
-                }
-            } catch (URISyntaxException ex) {
-                throw new RuntimeException(ex);
-            } catch (MalformedURLException ex) {
-                LOG.error("image favicon is not correct");
-            } catch (IOException ex) {
-                LOG.error("can not load favicon");
-            }
-        }
+//        HashMap<String, String> domainFavIcons = new HashMap<>();
+//        for (String sourceLink : sourceLinksUnique) {
+//            try {
+//                URI tmpUri = new URI(sourceLink);
+//                String hostName = tmpUri.getHost();
+//                if (!domainFavIcons.containsKey(hostName)) {
+//                    LOG.info("Downloading {} favicon ...", hostName );
+//                    BufferedImage img = ImageIO.read(new URL("https://www.google.com/s2/favicons?domain_url=" + hostName));
+//                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+//                    ImageIO.write(img, "png", Base64.getEncoder().wrap(os));
+//                    domainFavIcons.put(hostName, os.toString("UTF-8"));
+//                }
+//            } catch (URISyntaxException ex) {
+//                throw new RuntimeException(ex);
+//            } catch (MalformedURLException ex) {
+//                LOG.error("image favicon is not correct");
+//            } catch (IOException ex) {
+//                LOG.error("can not load favicon");
+//            }
+//        }
 
-        favIcon2Json(domainFavIcons, new File("favicons.json"));
+//        favIcon2Json(domainFavIcons, new File("favicons.json"));
 
         for (Map.Entry<Integer, List<StoryItem>> entry : storyGroup.entrySet()) {
             writeNDaysBefore(new File("database-" + entry.getKey().toString() + ".json"), entry.getValue(), 99);
