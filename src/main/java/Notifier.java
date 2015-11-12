@@ -27,7 +27,7 @@ public class Notifier {
 
     public static void pushStories2Device(List<StoryItem> storyItem, int numUpdate) {
         LOG.info("Start pushing...");
-        String text = storyItem.stream().map(p -> String.format("[%s]%s", p.keyword, p.title))
+        String text = storyItem.stream().map(p -> String.format("[%s] %s", p.keyword, p.title))
                 .collect(Collectors.joining("; "));
         String title = "欧洲金融快报";
         sendNotification(deviceServer, title, text, numUpdate);

@@ -139,7 +139,7 @@ public class JsonIO {
     }
 
 
-    private static void favIcon2Json(List<StoryItem> tmpStoriesUnique, File outFile) {
+    public static void favIcon2Json(List<StoryItem> tmpStoriesUnique, File outFile) {
 
         List<String> sourceLinksUnique =
                 tmpStoriesUnique.stream().flatMap(p -> p.sourceArticles.stream())

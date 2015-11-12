@@ -83,8 +83,10 @@ public class Main {
 
         long startTime = System.currentTimeMillis() - UpdateInterval.HOUR.getNumVal();
         feedDatabase.updateAll();
+
         List<StoryItem> uniqueStories = JsonIO.writeStoriesData(feedDatabase);
-        JsonIO.database2Json(feedDatabase, dbJson);
+
+        JsonIO.favIcon2Json(uniqueStories, new File("favicon.json"));
 
         List<StoryItem> newStories = uniqueStories.stream()
                 .filter(p -> p.fetchTime > startTime)
@@ -100,6 +102,7 @@ public class Main {
             Notifier.pushStories2Device(pushStory, newStories.size());
         }
 
+        JsonIO.database2Json(feedDatabase, dbJson);
     }
 
 
