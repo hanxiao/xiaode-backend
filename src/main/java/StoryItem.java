@@ -1,5 +1,7 @@
 import com.rometools.rome.feed.synd.SyndEntry;
+import com.rometools.utils.Strings;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import org.imgscalr.Scalr;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -9,7 +11,11 @@ import org.slf4j.LoggerFactory;
 import utils.ChineseTrans;
 import utils.EditDistance;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.Serializable;
+import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashSet;
@@ -117,7 +123,7 @@ public class StoryItem implements Serializable {
                         articleItem = new ArticleItem(this_link);
                         LOG.info("Extracted content from {} for feedName {}", this_link, keyword);
                     } catch (Exception ex) {
-                        LOG.error("Smart extraction failed on {} Fallback to link", this_link);
+                        LOG.error("Smart extraction failed on {} fallback to link", this_link);
                         articleItem = new ArticleItem(null, null, this_link);
                     }
 
@@ -126,7 +132,22 @@ public class StoryItem implements Serializable {
                         if (articleItem.imgSize > maxSize) {
                             mainImage = articleItem.imageUrl;
                         }
-                     }
+                    }
+
+                    if (mainImage != null && !Strings.isEmpty(mainImage)) {
+                        try {
+                            File thumbFile = new File(String.format("thumbnail/%d.png", id));
+                            if (!thumbFile.exists()) {
+                                URL url = new URL(mainImage);
+                                BufferedImage image = ImageIO.read(url);
+                                BufferedImage thumbnail =
+                                        Scalr.resize(image, Scalr.Method.SPEED, Scalr.Mode.FIT_TO_WIDTH,
+                                                400, 300, Scalr.OP_ANTIALIAS);
+                                ImageIO.write(thumbnail, "png", thumbFile);
+                            }
+                        }  catch (Exception ignored) {
+                        }
+                    }
 
                     if (articleItem.mainContent != null) {
                         articleItem.mainContent = chineseTrans.normalizeCAP(

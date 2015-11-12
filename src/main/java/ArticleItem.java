@@ -95,7 +95,7 @@ public class ArticleItem implements Serializable {
         Article article = ce.extractContent(html, "ReadabilitySnack");
         imageUrl = article.getTopImage().getImageSrc();
         if (imageUrl != null) {
-            if (!imageUrl.startsWith("http")) {
+            if (!imageUrl.startsWith("http") && !imageUrl.contains("logo")) {
                 imageUrl = completeImageUrl(imageUrl);
             } else {
                 imageUrl = (!imageUrl.contains("logo")
