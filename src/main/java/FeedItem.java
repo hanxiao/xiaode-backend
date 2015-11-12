@@ -74,16 +74,11 @@ public class FeedItem implements Serializable {
             }
             this.lastUpdateTime = System.currentTimeMillis();
         } else {
-            LOG.info("This feedName has been updated {} hour ago.", (double)timeDiff / UpdateInterval.HOUR.getNumVal());
+            LOG.info("Feed {} has been updated {} hour ago.",
+                    feedName,
+                    (double)timeDiff / UpdateInterval.HOUR.getNumVal());
         }
 
 
     }
-
-
-
-
-
-
-
 }

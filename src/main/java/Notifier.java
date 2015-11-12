@@ -13,16 +13,25 @@ import org.slf4j.LoggerFactory;
 import utils.CollectionAdapter;
 
 import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by hxiao on 15/11/4.
  */
-public class TestNotif {
-    private static transient final Logger LOG = LoggerFactory.getLogger(TestNotif.class);
+public class Notifier {
+    private static transient final Logger LOG = LoggerFactory.getLogger(Notifier.class);
+
+    private static String deviceServer = "https://spreadsheets.google.com/feeds/list/1Qe_3I7ijdDPp5dFU6ho9eD-5w0gWkVla4nxlGhUGL-I/1/public/basic?alt=json";
+
+    public static void pushStories2Device(List<StoryItem> storyItem, int numUpdate) {
+        LOG.info("Start pushing...");
+        String text = storyItem.stream().map(p -> String.format("[%s] %s", p.keyword, p.title))
+                .collect(Collectors.joining("  "));
+        String title = "欧洲金融快报";
+        sendNotification(deviceServer, title, text, numUpdate);
+    }
 
     private static void sendNotification(String deviceServer, String title,
                                          String text, int numUpdate) {
@@ -55,7 +64,6 @@ public class TestNotif {
                         .get("deviceid").getAsString();
                 LOG.info("push {}", deviceId);
                 try {
-
                     if (isIOSDevice(deviceId)) {
                         service.push(deviceId, iosPayload);
                     } else if (isAndroidDevice(deviceId)) {

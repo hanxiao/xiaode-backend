@@ -6,6 +6,9 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Comparator;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by han on 8/16/15.
@@ -77,11 +80,24 @@ public class Main {
 
         feedDatabase.traverseKeyword(keywordNode, "Han");
 
+        long startTime = System.currentTimeMillis() - 10000L;
         feedDatabase.updateAll();
-        JsonIO.writeStoriesData(feedDatabase);
+        List<StoryItem> uniqueStories = JsonIO.writeStoriesData(feedDatabase);
         JsonIO.database2Json(feedDatabase, dbJson);
 
-//        feedDatabase.saveFile(new File("database.bin"));
+        List<StoryItem> newStories = uniqueStories.stream()
+                .filter(p -> p.fetchTime > startTime)
+                .collect(Collectors.toList());
+
+        if (newStories.size() > 0) {
+            List<StoryItem> pushStory = newStories.stream()
+                    .sorted(Comparator.comparingLong(StoryItem::getPublishTime))
+                    .limit(3)
+                    .collect(Collectors.toList());
+
+            Notifier.pushStories2Device(pushStory, newStories.size());
+        }
+
     }
 
 

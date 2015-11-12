@@ -38,7 +38,11 @@ public class StoryItem implements Serializable {
     public String summary;
     public HashSet<String> images;
     public String mainImage;
+
+
+
     public long publishTime;
+    public long fetchTime;
 
     public String getPublishDate() {
         return publishDate;
@@ -50,6 +54,14 @@ public class StoryItem implements Serializable {
     public int numViews;
     public transient ChineseTrans chineseTrans;
 
+
+    public int getNumSource() {
+        return sourceArticles.size();
+    }
+
+    public long getPublishTime() {
+        return publishTime;
+    }
 
     public String getKeyword() {
         return keyword;
@@ -75,6 +87,7 @@ public class StoryItem implements Serializable {
         this.author = storyItem.author;
         this.numViews = storyItem.numViews;
         this.chineseTrans = storyItem.chineseTrans;
+        this.fetchTime = storyItem.fetchTime;
         this.sourceArticles = new HashSet<ArticleItem>();
         for (ArticleItem articleItem : storyItem.sourceArticles) {
             this.sourceArticles.add(articleItem.copy());
@@ -95,6 +108,7 @@ public class StoryItem implements Serializable {
         this.title = cleanTitle(sf.getTitle());
         this.numViews = 0;
         this.id = this.hashCode();
+        this.fetchTime = System.currentTimeMillis();
 
         this.summary = cleanContent(sf.getDescription().getValue())
                 .replace(this.title, "")
@@ -136,14 +150,14 @@ public class StoryItem implements Serializable {
 
                     if (mainImage != null && !Strings.isEmpty(mainImage)) {
                         try {
-                            File thumbFile = new File(String.format("thumbnail/%d.png", id));
+                            File thumbFile = new File(String.format("thumbnail/%d.jpg", id));
                             if (!thumbFile.exists()) {
                                 URL url = new URL(mainImage);
                                 BufferedImage image = ImageIO.read(url);
                                 BufferedImage thumbnail =
                                         Scalr.resize(image, Scalr.Method.SPEED, Scalr.Mode.FIT_TO_WIDTH,
-                                                400, 300, Scalr.OP_ANTIALIAS);
-                                ImageIO.write(thumbnail, "png", thumbFile);
+                                                300, 300, Scalr.OP_ANTIALIAS);
+                                ImageIO.write(thumbnail, "jpg", thumbFile);
                             }
                         }  catch (Exception ignored) {
                         }

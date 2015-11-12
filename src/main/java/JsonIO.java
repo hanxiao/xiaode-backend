@@ -1,15 +1,22 @@
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import utils.CollectionAdapter;
 import utils.LZString;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.MalformedURLException;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -52,7 +59,7 @@ public class JsonIO {
         }
     }
 
-    public static void writeStoriesData(FeedDatabase feedDatabase) {
+    public static List<StoryItem> writeStoriesData(FeedDatabase feedDatabase) {
         List<StoryItem> tmpStories = feedDatabase.getAllFeeds().values().stream().flatMap(p -> p.allStories.stream())
                 .sorted((e1, e2) -> Long.compare(e2.publishTime, e1.publishTime))
                 .collect(Collectors.toList());
@@ -99,12 +106,12 @@ public class JsonIO {
         tmpStoriesUnique.stream().flatMap(p -> p.sourceArticles.stream())
                 .forEach(p -> p.normalizeScore(posAvg, negAvg, posStd, negStd));
 
-//        Map<String, Map<String, Double>> posChart =  tmpStoriesUnique.stream()
-//                .collect(Collectors.groupingBy(StoryItem::getKeyword ,
-//                        Collectors.groupingBy(StoryItem::getPublishDate,
-//                                Collectors.averagingDouble(p ->
-//                                        p.sourceArticles.stream().mapToDouble(j -> j.posFactor)
-//                                                .average().getAsDouble()))));
+        Map<String, Map<String, Double>> posChart =  tmpStoriesUnique.stream()
+                .collect(Collectors.groupingBy(StoryItem::getKeyword ,
+                        Collectors.groupingBy(StoryItem::getPublishDate,
+                                Collectors.averagingDouble(p ->
+                                        p.sourceArticles.stream().mapToDouble(j -> j.posFactor)
+                                                .average().getAsDouble()))));
 //
 //
 //        Map<String, Map<String, Double>> negChart =  tmpStoriesUnique.stream()
@@ -122,49 +129,46 @@ public class JsonIO {
         Map<Integer, List<StoryItem>> storyGroup =
         tmpStoriesUnique.stream().collect(Collectors.groupingBy(StoryItem::getIdByGroup));
 
-//        List<String> sourceLinksUnique =
-//                tmpStoriesUnique.stream().flatMap(p -> p.sourceArticles.stream())
-//                .map(p -> p.sourceLink).collect(Collectors.toList());
-
-//        HashMap<String, String> domainFavIcons = new HashMap<>();
-//        for (String sourceLink : sourceLinksUnique) {
-//            try {
-//                URI tmpUri = new URI(sourceLink);
-//                String hostName = tmpUri.getHost();
-//                if (!domainFavIcons.containsKey(hostName)) {
-//                    LOG.info("Downloading {} favicon ...", hostName );
-//                    BufferedImage img = ImageIO.read(new URL("https://www.google.com/s2/favicons?domain_url=" + hostName));
-//                    ByteArrayOutputStream os = new ByteArrayOutputStream();
-//                    ImageIO.write(img, "png", Base64.getEncoder().wrap(os));
-//                    domainFavIcons.put(hostName, os.toString("UTF-8"));
-//                }
-//            } catch (URISyntaxException ex) {
-//                throw new RuntimeException(ex);
-//            } catch (MalformedURLException ex) {
-//                LOG.error("image favicon is not correct");
-//            } catch (IOException ex) {
-//                LOG.error("can not load favicon");
-//            }
-//        }
-
-//        favIcon2Json(domainFavIcons, new File("favicons.json"));
 
         for (Map.Entry<Integer, List<StoryItem>> entry : storyGroup.entrySet()) {
             writeNDaysBefore(new File("database-" + entry.getKey().toString() + ".json"), entry.getValue(), 99);
         }
 
-        //get all users from device server
-        // send notification
-        // to ios
-        // to android
+        return tmpStoriesUnique;
 
     }
 
 
-    private static void favIcon2Json(HashMap<String, String> favIcons, File outFile) {
+    private static void favIcon2Json(List<StoryItem> tmpStoriesUnique, File outFile) {
+
+        List<String> sourceLinksUnique =
+                tmpStoriesUnique.stream().flatMap(p -> p.sourceArticles.stream())
+                        .map(p -> p.sourceLink).collect(Collectors.toList());
+
+        HashMap<String, String> domainFavIcons = new HashMap<>();
+        for (String sourceLink : sourceLinksUnique) {
+            try {
+                URI tmpUri = new URI(sourceLink);
+                String hostName = tmpUri.getHost();
+                if (!domainFavIcons.containsKey(hostName)) {
+                    LOG.info("Downloading {} favicon ...", hostName );
+                    BufferedImage img = ImageIO.read(new URL("https://www.google.com/s2/favicons?domain_url=" + hostName));
+                    ByteArrayOutputStream os = new ByteArrayOutputStream();
+                    ImageIO.write(img, "png", Base64.getEncoder().wrap(os));
+                    domainFavIcons.put(hostName, os.toString("UTF-8"));
+                }
+            } catch (URISyntaxException ex) {
+                throw new RuntimeException(ex);
+            } catch (MalformedURLException ex) {
+                LOG.error("image favicon is not correct");
+            } catch (IOException ex) {
+                LOG.error("can not load favicon");
+            }
+        }
+
         Gson gson = new GsonBuilder()
                 .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
-        String jsonOutput = gson.toJson(favIcons);
+        String jsonOutput = gson.toJson(domainFavIcons);
 
         writeToFile(outFile, jsonOutput);
     }
