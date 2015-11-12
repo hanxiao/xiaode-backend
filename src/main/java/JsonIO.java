@@ -18,6 +18,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -141,29 +145,54 @@ public class JsonIO {
 
     public static void favIcon2Json(List<StoryItem> tmpStoriesUnique, File outFile) {
 
+        int nrOfThreads = 8;
+        ExecutorService executor = Executors.newFixedThreadPool(nrOfThreads);
+        final AtomicInteger nrOfJobs = new AtomicInteger(0);
+
         List<String> sourceLinksUnique =
                 tmpStoriesUnique.stream().flatMap(p -> p.sourceArticles.stream())
                         .map(p -> p.sourceLink).collect(Collectors.toList());
 
         HashMap<String, String> domainFavIcons = new HashMap<>();
         for (String sourceLink : sourceLinksUnique) {
-            try {
-                URI tmpUri = new URI(sourceLink);
-                String hostName = tmpUri.getHost();
-                if (!domainFavIcons.containsKey(hostName)) {
-                    LOG.info("Downloading {} favicon ...", hostName );
-                    BufferedImage img = ImageIO.read(new URL("https://www.google.com/s2/favicons?domain_url=" + hostName));
-                    ByteArrayOutputStream os = new ByteArrayOutputStream();
-                    ImageIO.write(img, "png", Base64.getEncoder().wrap(os));
-                    domainFavIcons.put(hostName, os.toString("UTF-8"));
+            while (nrOfJobs.get() > nrOfThreads) {
+                try {
+                    Thread.sleep(5);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
                 }
-            } catch (URISyntaxException ex) {
-                throw new RuntimeException(ex);
-            } catch (MalformedURLException ex) {
-                LOG.error("image favicon is not correct");
-            } catch (IOException ex) {
-                LOG.error("can not load favicon");
             }
+
+            executor.execute(new Runnable() {
+                public void run() {
+                    try {
+                        URI tmpUri = new URI(sourceLink);
+                        String hostName = tmpUri.getHost();
+                        if (!domainFavIcons.containsKey(hostName)) {
+                            LOG.info("Downloading {} favicon ...", hostName );
+                            BufferedImage img = ImageIO.read(new URL("https://www.google.com/s2/favicons?domain_url=" + hostName));
+                            ByteArrayOutputStream os = new ByteArrayOutputStream();
+                            ImageIO.write(img, "png", Base64.getEncoder().wrap(os));
+                            domainFavIcons.put(hostName, os.toString("UTF-8"));
+                        }
+                    } catch (URISyntaxException ex) {
+                        throw new RuntimeException(ex);
+                    } catch (MalformedURLException ex) {
+                        LOG.error("image favicon is not correct");
+                    } catch (IOException ex) {
+                        LOG.error("can not load favicon");
+                    }
+                    nrOfJobs.decrementAndGet();
+                }
+            });
+
+        }
+
+        executor.shutdown();
+        try {
+            executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
 
         Gson gson = new GsonBuilder()

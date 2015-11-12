@@ -86,7 +86,7 @@ public class Main {
 
         List<StoryItem> uniqueStories = JsonIO.writeStoriesData(feedDatabase);
 
-        JsonIO.favIcon2Json(uniqueStories, new File("favicon.json"));
+        //JsonIO.favIcon2Json(uniqueStories, new File("favicon.json"));
 
         List<StoryItem> newStories = uniqueStories.stream()
                 .filter(p -> p.fetchTime > startTime)
