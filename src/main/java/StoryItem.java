@@ -54,6 +54,8 @@ public class StoryItem implements Serializable {
     public int numViews;
     public transient ChineseTrans chineseTrans;
 
+    public boolean hasPushed;
+
 
     public int getNumSource() {
         return sourceArticles.size();
@@ -88,6 +90,7 @@ public class StoryItem implements Serializable {
         this.numViews = storyItem.numViews;
         this.chineseTrans = storyItem.chineseTrans;
         this.fetchTime = storyItem.fetchTime;
+        this.hasPushed = storyItem.hasPushed;
         this.sourceArticles = new HashSet<ArticleItem>();
         for (ArticleItem articleItem : storyItem.sourceArticles) {
             this.sourceArticles.add(articleItem.copy());
@@ -109,6 +112,7 @@ public class StoryItem implements Serializable {
         this.numViews = 0;
         this.id = this.hashCode();
         this.fetchTime = System.currentTimeMillis();
+        this.hasPushed = false;
 
         this.summary = cleanContent(sf.getDescription().getValue())
                 .replace(this.title, "")
@@ -176,6 +180,9 @@ public class StoryItem implements Serializable {
         }
     }
 
+    public void setPushed() {
+        this.hasPushed = true;
+    }
 
     private String setAuthor(String org_title) {
         return org_title.substring(org_title.lastIndexOf('-') + 1, org_title.length()).trim();

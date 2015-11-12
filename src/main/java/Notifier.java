@@ -27,10 +27,11 @@ public class Notifier {
 
     public static void pushStories2Device(List<StoryItem> storyItem, int numUpdate) {
         LOG.info("Start pushing...");
-        String text = storyItem.stream().map(p -> String.format("[%s] %s", p.keyword, p.title))
-                .collect(Collectors.joining("  "));
+        String text = storyItem.stream().map(p -> String.format("[%s]%s", p.keyword, p.title))
+                .collect(Collectors.joining("; "));
         String title = "欧洲金融快报";
         sendNotification(deviceServer, title, text, numUpdate);
+        storyItem.stream().forEach(StoryItem::setPushed);
     }
 
     private static void sendNotification(String deviceServer, String title,
@@ -107,8 +108,8 @@ public class Notifier {
                     .get("content")
                     .getAsJsonObject()
                     .get("$t").getAsString().split(",");
-            for (int j = 0; j < rowCols.length; j++) {
-                String [] keyVal = rowCols[j].split(":");
+            for (String rowCol : rowCols) {
+                String[] keyVal = rowCol.split(":");
                 rowObj.addProperty(keyVal[0].trim(), keyVal[1].trim());
             }
             jsonArray.add(rowObj);

@@ -3,6 +3,7 @@ import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import utils.UpdateInterval;
 
 import java.io.File;
 import java.io.IOException;
@@ -64,7 +65,7 @@ public class Main {
         if (kwJson.exists() && !kwJson.isDirectory()) {
             keywordNode = JsonIO.json2KeywordTree(kwJson);
         } else {
-            LOG.info("No feedName list found! Generate from scratch!");
+            LOG.warn("No feed list found! Generate from scratch!");
             keywordNode = generateKeywordTree();
         }
 
@@ -72,7 +73,7 @@ public class Main {
         if(dbJson.exists() && !dbJson.isDirectory()) {
             feedDatabase = JsonIO.json2Database(dbJson);
         } else {
-            LOG.info("No feeds database found! Generate from scratch!");
+            LOG.warn("No feeds database found! Generate from scratch!");
             feedDatabase = new FeedDatabase();
         }
         // put write here only for debug
@@ -80,13 +81,14 @@ public class Main {
 
         feedDatabase.traverseKeyword(keywordNode, "Han");
 
-        long startTime = System.currentTimeMillis() - 10000L;
+        long startTime = System.currentTimeMillis() - UpdateInterval.HOUR.getNumVal();
         feedDatabase.updateAll();
         List<StoryItem> uniqueStories = JsonIO.writeStoriesData(feedDatabase);
         JsonIO.database2Json(feedDatabase, dbJson);
 
         List<StoryItem> newStories = uniqueStories.stream()
                 .filter(p -> p.fetchTime > startTime)
+                .filter(p -> !p.hasPushed)
                 .collect(Collectors.toList());
 
         if (newStories.size() > 0) {
