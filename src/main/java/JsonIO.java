@@ -29,6 +29,8 @@ import java.util.stream.Collectors;
  */
 public class JsonIO {
     private static transient final Logger LOG = LoggerFactory.getLogger(JsonIO.class);
+    private static Gson gson = new GsonBuilder()
+            .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
 
 
     private static void writeNDaysBefore(File outFile, List<StoryItem> tmpStoriesUnique, int daysBefore) {
@@ -39,8 +41,6 @@ public class JsonIO {
                 .filter(p -> p.publishTime > weekBefore)
                 .collect(Collectors.toList());
 
-        Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
         String jsonOutput = gson.toJson(day7Stories);
 
         writeToFile(outFile, jsonOutput);
@@ -159,8 +159,7 @@ public class JsonIO {
     }
 
     public static void writeSentiment(Map<String, Map<String, Double>> sentiData, File outFile) {
-        Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
+
         String jsonOutput = gson.toJson(sentiData);
 
         writeToFile(outFile, jsonOutput);
@@ -223,16 +222,14 @@ public class JsonIO {
             e.printStackTrace();
         }
 
-        Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
+
         String jsonOutput = gson.toJson(domainFavIcons);
 
         writeToFile(outFile, jsonOutput);
     }
 
     public static void database2Json(FeedDatabase feedDatabase, File outFile) {
-        Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
+
         String jsonOutput = gson.toJson(feedDatabase);
 
         writeToFile(outFile, jsonOutput);
@@ -244,8 +241,6 @@ public class JsonIO {
     }
 
     public static void keywordTree2Json(KeywordNode keywordNode, File outFile) {
-        Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
         String jsonOutput = gson.toJson(keywordNode);
 
         try {
@@ -259,8 +254,7 @@ public class JsonIO {
     }
 
     public static KeywordNode json2KeywordTree(File inFile) {
-        Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
+
         KeywordNode keywordNode = null;
         try {
             String content = new Scanner(inFile).useDelimiter("\\Z").next();
@@ -272,8 +266,7 @@ public class JsonIO {
     }
 
     public static FeedDatabase json2Database(File inFile) {
-        Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
+
         FeedDatabase feedDatabase = null;
         try {
             String content = new Scanner(inFile).useDelimiter("\\Z").next();
@@ -282,6 +275,36 @@ public class JsonIO {
             LOG.error("Error {} whe reading files", e);
         }
         return feedDatabase;
+    }
+
+    public static HashSet<Integer> loadPushId(File inFile) {
+        HashSet<Integer> ids = null;
+        if (inFile.exists() && !inFile.isDirectory()) {
+            try {
+                String content = new Scanner(inFile).useDelimiter("\\Z").next();
+                ids = gson.fromJson(content, HashSet.class);
+            } catch (IOException e) {
+                LOG.error("Error {} whe reading files", e);
+            }
+        } else {
+            LOG.warn("No pushed list found! Generate from scratch!");
+            ids =  new HashSet<Integer>();
+        }
+
+        return ids;
+    }
+
+    public static void pushId2Json(HashSet<Integer> pushId, File outFile) {
+        String jsonOutput = gson.toJson(pushId);
+
+        try {
+            PrintWriter writer = new PrintWriter(new FileOutputStream(outFile, false));
+            writer.println(jsonOutput);
+            writer.flush();
+            writer.close();
+        } catch (IOException ex) {
+            LOG.error("Could not save Database {}", outFile, ex);
+        }
     }
 
 }

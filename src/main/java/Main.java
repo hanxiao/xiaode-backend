@@ -8,6 +8,7 @@ import utils.UpdateInterval;
 import java.io.File;
 import java.io.IOException;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,6 +27,12 @@ public class Main {
 
     @Option(name = "--help", usage = "Print this help message")
     boolean help = false;
+
+    File pushedJson = new File("pushed-list.json");
+
+    final HashSet<Integer> pushedId = JsonIO.loadPushId(pushedJson);
+
+    final int numPush = 3;
 
     private static void printHelp(final CmdLineParser parser) {
         System.out.print("java -jar xiaode.jar");
@@ -61,6 +68,7 @@ public class Main {
 
 
     public void run() {
+
         KeywordNode keywordNode;
         if (kwJson.exists() && !kwJson.isDirectory()) {
             keywordNode = JsonIO.json2KeywordTree(kwJson);
@@ -90,21 +98,25 @@ public class Main {
 
         List<StoryItem> newStories = uniqueStories.stream()
                 .filter(p -> p.fetchTime > startTime)
-                .filter(p -> !p.hasPushed)
+                .filter(p -> !pushedId.contains(p.id))
                 .collect(Collectors.toList());
+
+
 
         if (newStories.size() > 0) {
             List<StoryItem> pushStory = newStories.stream()
                     .sorted(Comparator.comparingLong(StoryItem::getPublishTime))
-                    .limit(3)
+                    .limit(numPush)
                     .collect(Collectors.toList());
 
             Notifier.pushStories2Device(pushStory, newStories.size());
+
+            pushStory.stream().forEach(p -> pushedId.add(p.id));
+            JsonIO.pushId2Json(pushedId, pushedJson);
         }
 
         JsonIO.database2Json(feedDatabase, dbJson);
     }
-
 
     public KeywordNode generateKeywordTree() {
         KeywordNode categoryNode = new KeywordNode("全球", "经济");
