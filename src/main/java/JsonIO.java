@@ -97,9 +97,12 @@ public class JsonIO {
                 .mapToDouble(p -> p.posFactor).summaryStatistics();
         DoubleSummaryStatistics negStat =  tmpStoriesUnique.stream().flatMap(p -> p.sourceArticles.stream())
                 .mapToDouble(p -> p.negFactor).summaryStatistics();
+        DoubleSummaryStatistics neuStat =  tmpStoriesUnique.stream().flatMap(p -> p.sourceArticles.stream())
+                .mapToDouble(p -> p.neutralFactor).summaryStatistics();
 
         double posAvg = posStat.getAverage();
         double negAvg = negStat.getAverage();
+        double neuAvg = neuStat.getAverage();
 
         double posStd = Math.sqrt(tmpStoriesUnique.stream().flatMap(p -> p.sourceArticles.stream())
                 .mapToDouble(p -> (p.posFactor - posAvg) * (p.posFactor - posAvg)).sum() / posStat.getCount());
@@ -107,8 +110,11 @@ public class JsonIO {
         double negStd = Math.sqrt(tmpStoriesUnique.stream().flatMap(p -> p.sourceArticles.stream())
                 .mapToDouble(p -> (p.negFactor - negAvg) * (p.negFactor - negAvg)).sum() / negStat.getCount());
 
+        double neuStd = Math.sqrt(tmpStoriesUnique.stream().flatMap(p -> p.sourceArticles.stream())
+                .mapToDouble(p -> (p.neutralFactor - neuAvg) * (p.neutralFactor - neuAvg)).sum() / neuStat.getCount());
+
         tmpStoriesUnique.stream().flatMap(p -> p.sourceArticles.stream())
-                .forEach(p -> p.normalizeScore(posAvg, negAvg, posStd, negStd));
+                .forEach(p -> p.normalizeScore(posAvg, negAvg, neuAvg, posStd, negStd, neuStd));
 
         Map<String, Map<String, Double>> posChart =  tmpStoriesUnique.stream()
                 .collect(Collectors.groupingBy(StoryItem::getKeyword ,
@@ -116,19 +122,29 @@ public class JsonIO {
                                 Collectors.averagingDouble(p ->
                                         p.sourceArticles.stream().mapToDouble(j -> j.posFactor)
                                                 .average().getAsDouble()))));
-//
-//
-//        Map<String, Map<String, Double>> negChart =  tmpStoriesUnique.stream()
-//                .collect(Collectors.groupingBy(StoryItem::getKeyword,
-//                        Collectors.groupingBy(StoryItem::getPublishDate,
-//                                Collectors.averagingDouble(p ->
-//                                        p.sourceArticles.stream().mapToDouble(j -> j.negFactor)
-//                                                .average().getAsDouble()))));
+
+
+        Map<String, Map<String, Double>> negChart =  tmpStoriesUnique.stream()
+                .collect(Collectors.groupingBy(StoryItem::getKeyword,
+                        Collectors.groupingBy(StoryItem::getPublishDate,
+                                Collectors.averagingDouble(p ->
+                                        p.sourceArticles.stream().mapToDouble(j -> j.negFactor)
+                                                .average().getAsDouble()))));
+
+        Map<String, Map<String, Double>> neuChart =  tmpStoriesUnique.stream()
+                .collect(Collectors.groupingBy(StoryItem::getKeyword,
+                        Collectors.groupingBy(StoryItem::getPublishDate,
+                                Collectors.averagingDouble(p ->
+                                        p.sourceArticles.stream().mapToDouble(j -> j.neutralFactor)
+                                                .average().getAsDouble()))));
 
         writeNDaysBefore(new File("database-3days.json"), tmpStoriesUnique, 3);
         writeNDaysBefore(new File("database-week.json"), tmpStoriesUnique, 7);
         writeNDaysBefore(new File("database-month.json"), tmpStoriesUnique, 31);
 
+        writeSentiment(neuChart, new File("senti-neutral.json"));
+        writeSentiment(posChart, new File("senti-positive.json"));
+        writeSentiment(posChart, new File("senti-negative.json"));
 
         Map<Integer, List<StoryItem>> storyGroup =
         tmpStoriesUnique.stream().collect(Collectors.groupingBy(StoryItem::getIdByGroup));
@@ -140,6 +156,18 @@ public class JsonIO {
 
         return tmpStoriesUnique;
 
+    }
+
+    public static void writeSentiment(Map<String, Map<String, Double>> sentiData, File outFile) {
+        Gson gson = new GsonBuilder()
+                .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
+        String jsonOutput = gson.toJson(sentiData);
+
+        writeToFile(outFile, jsonOutput);
+        LOG.info("Compressing...");
+        String jsonCompressed = LZString.compressToEncodedURIComponent(jsonOutput);
+
+        writeToFile(new File(outFile.getName() + ".lz"), jsonCompressed);
     }
 
 

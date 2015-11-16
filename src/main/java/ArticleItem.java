@@ -22,6 +22,7 @@ public class ArticleItem implements Serializable {
     String sourceLink;
     double posFactor = 0;
     double negFactor = 0;
+    double neutralFactor = 0;
     double imgSize;
     double imgRatio;
 
@@ -34,12 +35,15 @@ public class ArticleItem implements Serializable {
         negWords.stream().filter(neg -> mainContent != null && mainContent.length() > 0).forEach(neg -> {
             negFactor += mainContent.contains(neg) ? 1 : 0;
         });
+        neutralFactor = posFactor - negFactor;
 
     }
 
-    public void normalizeScore(double posAvg, double negAvg, double posStd, double negStd) {
+    public void normalizeScore(double posAvg, double negAvg, double neuAvg,
+                               double posStd, double negStd, double neuStd) {
         posFactor = (posFactor - posAvg) / posStd;
         negFactor = (negFactor - negAvg) / negStd;
+        neutralFactor = (neutralFactor - neuAvg) / neuStd;
     }
 
     public ArticleItem(ArticleItem articleItem) {
