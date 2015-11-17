@@ -12,6 +12,7 @@ import utils.ChineseTrans;
 import utils.EditDistance;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.Serializable;
@@ -157,7 +158,7 @@ public class StoryItem implements Serializable {
                             File thumbFile = new File(String.format("thumbnail/%d.jpg", id));
                             if (!thumbFile.exists()) {
                                 URL url = new URL(mainImage);
-                                BufferedImage image = ImageIO.read(url);
+                                BufferedImage image = (BufferedImage) new ImageIcon(url).getImage();
                                 BufferedImage thumbnail =
                                         Scalr.resize(image, Scalr.Method.SPEED, Scalr.Mode.FIT_TO_WIDTH,
                                                 300, 300, Scalr.OP_ANTIALIAS);

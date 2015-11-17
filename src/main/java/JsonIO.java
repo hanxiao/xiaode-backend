@@ -8,6 +8,7 @@ import utils.CollectionAdapter;
 import utils.LZString;
 
 import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -197,7 +198,7 @@ public class JsonIO {
                         String hostName = tmpUri.getHost();
                         if (!domainFavIcons.containsKey(hostName)) {
                             LOG.info("Downloading {} favicon ...", hostName );
-                            BufferedImage img = ImageIO.read(new URL("https://www.google.com/s2/favicons?domain_url=" + hostName));
+                            BufferedImage img = (BufferedImage) new ImageIcon(new URL("https://www.google.com/s2/favicons?domain_url=" + hostName)).getImage();
                             ByteArrayOutputStream os = new ByteArrayOutputStream();
                             ImageIO.write(img, "png", Base64.getEncoder().wrap(os));
                             domainFavIcons.put(hostName, os.toString("UTF-8"));

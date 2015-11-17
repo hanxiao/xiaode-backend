@@ -9,7 +9,7 @@ import java.util.HashSet;
 public class KeywordNode {
     public String name;
     public String query;
-    public HashSet<KeywordNode> children = new HashSet<KeywordNode>();
+    public HashSet<KeywordNode> children = new HashSet<>();
 
     public KeywordNode(String name, String query) {
         this.name = name;

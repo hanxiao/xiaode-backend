@@ -1,4 +1,3 @@
-import com.rometools.rome.feed.synd.SyndEntry;
 import com.rometools.rome.feed.synd.SyndFeed;
 import com.rometools.rome.io.FeedException;
 import com.rometools.rome.io.SyndFeedInput;
@@ -13,7 +12,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.List;
+import java.util.concurrent.ExecutionException;
 
 
 /**
@@ -57,19 +56,20 @@ public class FeedItem implements Serializable {
             try {
                 SyndFeedInput input = new SyndFeedInput();
                 SyndFeed feed = input.build(new XmlReader(feedUrl));
-                feed.getEntries().parallelStream().map(p ->
-                        new StoryItem(feedName, p))
-                        .filter(p-> p!=null)
-                        .forEach(p -> {
-                            allStories.add(p);
-                            LOG.info("New post {} is added to {}!", p.title, feedName);
-                        });
+                GlobalConfiguration.forkJoinPool.submit(() ->
+                        feed.getEntries().parallelStream().map(p ->
+                                new StoryItem(feedName, p))
+                                .filter(p-> p!=null)
+                                .forEach(p -> {
+                                    allStories.add(p);
+                                    LOG.info("New post {} is added to {}!", p.title, feedName);
+                                })).get();
             }
-            catch (IOException exception) {
+            catch (IOException | FeedException exception) {
                 LOG.error("Can not read from {}", feedUrl);
             }
-            catch (FeedException exception) {
-                LOG.error("Feed can not be built");
+            catch (InterruptedException | ExecutionException ex) {
+                LOG.error("Thread pool is error");
             }
             this.lastUpdateTime = System.currentTimeMillis();
         } else {

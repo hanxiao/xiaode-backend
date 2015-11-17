@@ -5,7 +5,7 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
+import javax.swing.*;
 import java.awt.image.RenderedImage;
 import java.io.Serializable;
 import java.net.URL;
@@ -78,7 +78,7 @@ public class ArticleItem implements Serializable {
             String candidateUrl = info[0] +"://" + middleUrl + urlSuffix;
             try {
                 URL url = new URL(candidateUrl);
-                RenderedImage img = ImageIO.read(url);
+                java.awt.Image img = new ImageIcon(url).getImage();
                 if (img != null) {
                     return candidateUrl;
                 }
@@ -110,7 +110,7 @@ public class ArticleItem implements Serializable {
         }
         if (this.imageUrl != null) {
             URL url = new URL(this.imageUrl);
-            RenderedImage img = ImageIO.read(url);
+            RenderedImage img = (RenderedImage) new ImageIcon(url).getImage();
             imgRatio = (double)img.getWidth()/ img.getHeight();
             if (imgRatio < 1.1 && imgRatio > 0.9) {
                 LOG.warn("Image is probably a logo or QR code!");

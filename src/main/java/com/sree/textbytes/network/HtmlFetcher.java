@@ -371,9 +371,9 @@ public class HtmlFetcher {
 		}
 
 		httpClient.getParams().setParameter("http.connection-manager.timeout",
-				1000000L);
+				10000L);
 		httpClient.getParams().setParameter("http.protocol.wait-for-continue",
-				1000000L);
+				10000L);
 		httpClient.getParams().setParameter("http.tcp.nodelay", true);
 
 	}
