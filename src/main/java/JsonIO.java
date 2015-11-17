@@ -1,3 +1,4 @@
+import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.apache.commons.io.FileUtils;
@@ -308,4 +309,34 @@ public class JsonIO {
         }
     }
 
+
+    public static Set<String> loadVisitedStories(File inFile) {
+        Set<String> ids = null;
+        if (inFile.exists() && !inFile.isDirectory()) {
+            try {
+                String content = new Scanner(inFile).useDelimiter("\\Z").next();
+                ids = gson.fromJson(content, HashSet.class);
+            } catch (IOException e) {
+                LOG.error("Error {} whe reading files", e);
+            }
+        } else {
+            LOG.warn("No visited stories found! Generate from scratch!");
+            ids = Sets.newConcurrentHashSet();
+        }
+
+        return ids;
+    }
+
+    public static void writeVisitedStories(Set<String> pushId, File outFile) {
+        String jsonOutput = gson.toJson(pushId);
+
+        try {
+            PrintWriter writer = new PrintWriter(new FileOutputStream(outFile, false));
+            writer.println(jsonOutput);
+            writer.flush();
+            writer.close();
+        } catch (IOException ex) {
+            LOG.error("Could not save Database {}", outFile, ex);
+        }
+    }
 }

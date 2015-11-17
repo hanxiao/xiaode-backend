@@ -2,13 +2,16 @@ import com.sree.textbytes.network.HtmlFetcher;
 import com.sree.textbytes.readabilityBUNDLE.Article;
 import com.sree.textbytes.readabilityBUNDLE.ContentExtractor;
 import org.apache.commons.lang.builder.EqualsBuilder;
+import org.jsoup.Jsoup;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import utils.URLChecker;
 
 import javax.swing.*;
-import java.awt.image.RenderedImage;
+import java.awt.image.ImageObserver;
 import java.io.Serializable;
 import java.net.URL;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -76,14 +79,9 @@ public class ArticleItem implements Serializable {
         for (String aSubInfo : subInfo) {
             middleUrl += aSubInfo + "/";
             String candidateUrl = info[0] +"://" + middleUrl + urlSuffix;
-            try {
-                URL url = new URL(candidateUrl);
-                java.awt.Image img = new ImageIcon(url).getImage();
-                if (img != null) {
-                    return candidateUrl;
-                }
-            } catch (Exception ignored) {
-            }
+
+            if (URLChecker.isValidate(candidateUrl))
+                return candidateUrl;
         }
         return null;
     }
@@ -93,8 +91,14 @@ public class ArticleItem implements Serializable {
         this.sourceLink = sourceLink;
 
         ContentExtractor ce = new ContentExtractor();
-        HtmlFetcher htmlFetcher = new HtmlFetcher();
-        String html = htmlFetcher.getHtml(sourceLink, 5000);
+        String html = Jsoup.connect(sourceLink)
+                .ignoreContentType(true)
+                .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
+                .referrer("http://www.google.com")
+                .timeout(12000)
+                .followRedirects(true)
+                .get().html();
+
 
         Article article = ce.extractContent(html, "ReadabilitySnack");
         imageUrl = article.getTopImage().getImageSrc();
@@ -110,13 +114,13 @@ public class ArticleItem implements Serializable {
         }
         if (this.imageUrl != null) {
             URL url = new URL(this.imageUrl);
-            RenderedImage img = (RenderedImage) new ImageIcon(url).getImage();
-            imgRatio = (double)img.getWidth()/ img.getHeight();
+            ImageIcon img = new ImageIcon(url);
+            imgRatio = (double)img.getIconWidth() / img.getIconHeight();
             if (imgRatio < 1.1 && imgRatio > 0.9) {
                 LOG.warn("Image is probably a logo or QR code!");
                 imageUrl = null;
             } else {
-                imgSize = img.getWidth() *  img.getHeight();
+                imgSize = img.getIconWidth() * img.getIconHeight();
             }
         }
         this.mainContent = article.getCleanedArticleText();

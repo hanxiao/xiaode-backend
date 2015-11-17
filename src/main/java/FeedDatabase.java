@@ -16,7 +16,6 @@ public class FeedDatabase implements Serializable {
     }
 
     private HashMap<String, FeedItem> allFeeds = new HashMap<String, FeedItem>();
-    private int nrOfThreads = 4 * Runtime.getRuntime().availableProcessors();
 
 
 
@@ -38,7 +37,6 @@ public class FeedDatabase implements Serializable {
 
             ObjectInputStream in = new ObjectInputStream(new BufferedInputStream(new FileInputStream(model)));
             FeedDatabase mat = (FeedDatabase) in.readObject();
-            mat.nrOfThreads = Runtime.getRuntime().availableProcessors();
             in.close();
             return mat;
 

@@ -20,6 +20,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashSet;
+import java.util.stream.Collectors;
 
 /**
  * Created by hxiao on 15/8/11.
@@ -126,59 +127,61 @@ public class StoryItem implements Serializable {
     }
 
     private void setSourceArticles(SyndEntry sf) {
-        sourceArticles = new HashSet<ArticleItem>();
+         new HashSet<ArticleItem>();
         String org_content = sf.getDescription().getValue();
         Document doc = Jsoup.parse(org_content);
         Elements links = doc.select("a[href]");
 
         double maxSize = 0;
-        for (Element link : links) {
-            if (link.attr("abs:href").matches(".*url=.*")) {
-                String this_link = link.attr("abs:href").replaceAll(".*?url=", "").trim();
-                ArticleItem articleItem = new ArticleItem(null, null, this_link);
-                if (this_link.length() > 0 && !sourceArticles.contains(articleItem)) {
-
+        sourceArticles = links.stream()
+                .filter(p -> p.attr("abs:href").matches(".*url=.*"))
+                .map(p -> p.attr("abs:href").replaceAll(".*?url=", "").trim())
+                .filter(p -> p.length() > 0 && !GlobalConfiguration.visitedStories.contains(p))
+                .map(p -> {
                     try {
-                        LOG.info("Extracting content from {} for {}", this_link, keyword);
-                        articleItem = new ArticleItem(this_link);
+                        LOG.info("Extracting [{}] {}", keyword, p);
+                        return new ArticleItem(p);
                     } catch (Exception ex) {
-                        LOG.error("Smart extraction failed on {} fallback to link", this_link);
-                        articleItem = new ArticleItem(null, null, this_link);
+                        LOG.error("Failed on [{}] {}", keyword, p);
+                        ex.printStackTrace();
+                        return new ArticleItem(null, null, p);
                     }
-
-                    if (articleItem.imageUrl != null) {
-                        images.add(articleItem.imageUrl);
-                        if (articleItem.imgSize > maxSize) {
-                            mainImage = articleItem.imageUrl;
-                        }
-                    }
-
-                    if (mainImage != null && !Strings.isEmpty(mainImage)) {
-                        try {
-                            File thumbFile = new File(String.format("thumbnail/%d.jpg", id));
-                            if (!thumbFile.exists()) {
-                                URL url = new URL(mainImage);
-                                BufferedImage image = (BufferedImage) new ImageIcon(url).getImage();
-                                BufferedImage thumbnail =
-                                        Scalr.resize(image, Scalr.Method.SPEED, Scalr.Mode.FIT_TO_WIDTH,
-                                                300, 300, Scalr.OP_ANTIALIAS);
-                                ImageIO.write(thumbnail, "jpg", thumbFile);
-                            }
-                        }  catch (Exception ignored) {
-                        }
-                    }
-
-                    if (articleItem.mainContent != null) {
-                        articleItem.mainContent = chineseTrans.normalizeCAP(
-                                chineseTrans.toSimp(articleItem.mainContent), false);
-                    }
-
-                    sourceArticles.add(articleItem);
+                })
+                .collect(Collectors.toCollection(HashSet::new));
 
 
+        sourceArticles.forEach(articleItem -> {
+
+            if (articleItem.imageUrl != null) {
+                images.add(articleItem.imageUrl);
+                if (articleItem.imgSize > maxSize) {
+                    mainImage = articleItem.imageUrl;
                 }
             }
-        }
+
+            if (mainImage != null && !Strings.isEmpty(mainImage)) {
+                try {
+                    File thumbFile = new File(String.format("thumbnail/%d.jpg", id));
+                    if (!thumbFile.exists()) {
+                        URL url = new URL(mainImage);
+                        BufferedImage image = (BufferedImage) new ImageIcon(url).getImage();
+                        BufferedImage thumbnail =
+                                Scalr.resize(image, Scalr.Method.SPEED, Scalr.Mode.FIT_TO_WIDTH,
+                                        300, 300, Scalr.OP_ANTIALIAS);
+                        ImageIO.write(thumbnail, "jpg", thumbFile);
+                    }
+                }  catch (Exception ignored) {
+                }
+            }
+
+            if (articleItem.mainContent != null) {
+                articleItem.mainContent = chineseTrans.normalizeCAP(
+                        chineseTrans.toSimp(articleItem.mainContent), false);
+            }
+
+            sourceArticles.add(articleItem);
+            GlobalConfiguration.visitedStories.add(articleItem.sourceLink);
+        });
     }
 
     public void setPushed() {
