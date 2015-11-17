@@ -138,8 +138,8 @@ public class StoryItem implements Serializable {
                 if (this_link.length() > 0 && !sourceArticles.contains(articleItem)) {
 
                     try {
+                        LOG.info("Extracting content from {} for {}", this_link, keyword);
                         articleItem = new ArticleItem(this_link);
-                        LOG.info("Extracted content from {} for feedName {}", this_link, keyword);
                     } catch (Exception ex) {
                         LOG.error("Smart extraction failed on {} fallback to link", this_link);
                         articleItem = new ArticleItem(null, null, this_link);

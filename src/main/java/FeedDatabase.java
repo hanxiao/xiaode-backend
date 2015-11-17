@@ -81,7 +81,7 @@ public class FeedDatabase implements Serializable {
     }
 
     public void updateAll() {
-        allFeeds.values().parallelStream().forEach(FeedItem::update);
+        allFeeds.values().stream().forEach(FeedItem::update);
     }
 
 

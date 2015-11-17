@@ -57,14 +57,13 @@ public class FeedItem implements Serializable {
             try {
                 SyndFeedInput input = new SyndFeedInput();
                 SyndFeed feed = input.build(new XmlReader(feedUrl));
-                List<SyndEntry> allFeeds = feed.getEntries();
-                for (SyndEntry sf : allFeeds) {
-                    StoryItem storyItem = new StoryItem(feedName, sf);
-                    if (storyItem != null) {
-                        allStories.add(storyItem);
-                    }
-                    LOG.info("New post {} is added to {}!", storyItem.title, feedName);
-                }
+                feed.getEntries().parallelStream().map(p ->
+                        new StoryItem(feedName, p))
+                        .filter(p-> p!=null)
+                        .forEach(p -> {
+                            allStories.add(p);
+                            LOG.info("New post {} is added to {}!", p.title, feedName);
+                        });
             }
             catch (IOException exception) {
                 LOG.error("Can not read from {}", feedUrl);
