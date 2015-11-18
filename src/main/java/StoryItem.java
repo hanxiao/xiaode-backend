@@ -4,7 +4,6 @@ import org.apache.commons.lang.builder.EqualsBuilder;
 import org.imgscalr.Scalr;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -20,6 +19,7 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -147,6 +147,7 @@ public class StoryItem implements Serializable {
                         return new ArticleItem(null, null, p);
                     }
                 })
+                .filter(Objects::nonNull)
                 .collect(Collectors.toCollection(HashSet::new));
 
 
@@ -272,9 +273,16 @@ public class StoryItem implements Serializable {
         this.publishDate = df.format(this.publishTime);
         this.author = storyItem.author.length() > this.author.length()
                 ? storyItem.author : this.author;
-        for (ArticleItem articleItem : storyItem.sourceArticles) {
-            this.sourceArticles.add(articleItem.copy());
+        if (Objects.isNull(sourceArticles)) {
+            this.sourceArticles =  new HashSet<>();
         }
+        if (Objects.isNull(storyItem.sourceArticles)) {
+            storyItem.sourceArticles =  new HashSet<>();
+        }
+        this.sourceArticles.addAll(storyItem.sourceArticles.stream()
+                .filter(Objects::nonNull)
+                .map(ArticleItem::copy)
+                .collect(Collectors.toList()));
     }
 
 }

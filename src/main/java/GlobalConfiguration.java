@@ -1,5 +1,4 @@
 import java.io.File;
-import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 
@@ -8,6 +7,7 @@ import java.util.concurrent.ForkJoinPool;
  */
 public class GlobalConfiguration {
     public static ForkJoinPool forkJoinPool = new ForkJoinPool(20);
+    public static File visitedFile = new File("visited-stories.json");
     public static Set<String> visitedStories =
-            JsonIO.loadVisitedStories(new File("visited-stories.json"));
+            JsonIO.loadVisitedStories(visitedFile);
 }

@@ -116,6 +116,8 @@ public class Main {
         }
 
         JsonIO.database2Json(feedDatabase, dbJson);
+        JsonIO.writeVisitedStories(GlobalConfiguration.visitedStories,
+                GlobalConfiguration.visitedFile);
     }
 
     public KeywordNode generateKeywordTree() {

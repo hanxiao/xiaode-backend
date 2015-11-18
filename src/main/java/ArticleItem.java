@@ -1,17 +1,17 @@
-import com.sree.textbytes.network.HtmlFetcher;
 import com.sree.textbytes.readabilityBUNDLE.Article;
 import com.sree.textbytes.readabilityBUNDLE.ContentExtractor;
 import org.apache.commons.lang.builder.EqualsBuilder;
 import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import utils.URLChecker;
 
 import javax.swing.*;
-import java.awt.image.ImageObserver;
+import java.io.IOException;
 import java.io.Serializable;
+import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -86,44 +86,77 @@ public class ArticleItem implements Serializable {
         return null;
     }
 
-    public ArticleItem(String sourceLink) throws Exception {
+    public ArticleItem(String sourceLink) {
 
         this.sourceLink = sourceLink;
 
-        ContentExtractor ce = new ContentExtractor();
-        String html = Jsoup.connect(sourceLink)
-                .ignoreContentType(true)
-                .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
-                .referrer("http://www.google.com")
-                .timeout(12000)
-                .followRedirects(true)
-                .get().html();
-
-
-        Article article = ce.extractContent(html, "ReadabilitySnack");
-        imageUrl = article.getTopImage().getImageSrc();
-        if (imageUrl != null) {
-            if (!imageUrl.startsWith("http") && !imageUrl.contains("logo")) {
-                imageUrl = completeImageUrl(imageUrl);
-            } else {
-                imageUrl = (!imageUrl.contains("logo")
-                        && imageUrl.trim().length() > 0) ?
-                        this.imageUrl : null;
-            }
-
+        Document fetchDoc = null;
+        try {
+            fetchDoc = Jsoup.connect(sourceLink)
+                    .ignoreContentType(true)
+                    .userAgent("Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:25.0) Gecko/20100101 Firefox/25.0")
+                    .referrer("http://www.google.com")
+                    .timeout(12000)
+                    .followRedirects(true)
+                    .get();
+        } catch (IOException ex) {
+            LOG.info("Connection timeout on {}", sourceLink);
         }
-        if (this.imageUrl != null) {
-            URL url = new URL(this.imageUrl);
-            ImageIcon img = new ImageIcon(url);
-            imgRatio = (double)img.getIconWidth() / img.getIconHeight();
-            if (imgRatio < 1.1 && imgRatio > 0.9) {
-                LOG.warn("Image is probably a logo or QR code!");
-                imageUrl = null;
-            } else {
-                imgSize = img.getIconWidth() * img.getIconHeight();
+
+        if (fetchDoc != null) {
+            String html = fetchDoc.html();
+            if (!html.trim().equals("")) {
+                ContentExtractor ce = new ContentExtractor();
+                Article article = ce.extractContent(html, "ReadabilitySnack");
+
+                if (article != null) {
+                    this.mainContent = article.getCleanedArticleText();
+
+                    if (article.getTopImage() != null) {
+                        imageUrl = article.getTopImage().getImageSrc();
+
+                        if (imageUrl != null) {
+                            if (!imageUrl.startsWith("http") && !imageUrl.contains("logo")) {
+
+                                fetchDoc.getElementsByTag("img")
+                                        .stream()
+                                        .map(p -> p.absUrl("src"))
+                                        .filter(p -> p.contains(imageUrl))
+                                        .distinct()
+                                        .findFirst().ifPresent(p -> {
+                                    LOG.info("Image {} is completed to {}", imageUrl, p);
+                                    imageUrl = p;
+                                });
+
+                                if (!imageUrl.startsWith("http")) {
+                                    imageUrl = completeImageUrl(imageUrl);
+                                }
+                            } else {
+                                imageUrl = (!imageUrl.contains("logo")
+                                        && imageUrl.trim().length() > 0) ?
+                                        this.imageUrl : null;
+                            }
+                        }
+
+                        try {
+                            if (this.imageUrl != null) {
+                                URL url = new URL(this.imageUrl);
+                                ImageIcon img = new ImageIcon(url);
+                                imgRatio = (double) img.getIconWidth() / img.getIconHeight();
+                                if (imgRatio < 1.1 && imgRatio > 0.9) {
+                                    LOG.warn("Image is probably a logo or QR code!");
+                                    imageUrl = null;
+                                } else {
+                                    imgSize = img.getIconWidth() * img.getIconHeight();
+                                }
+                            }
+                        } catch (MalformedURLException ex) {
+                            LOG.info("image url {} is not in correct form", imageUrl);
+                        }
+                    }
+                }
             }
         }
-        this.mainContent = article.getCleanedArticleText();
     }
 
     @Override
