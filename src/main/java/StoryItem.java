@@ -267,6 +267,8 @@ public class StoryItem implements Serializable {
             }
             this.images.addAll(storyItem.images);
         }
+
+
         this.publishTime = storyItem.publishTime < this.publishTime
                 ? storyItem.publishTime : this.publishTime;
         DateFormat df = new SimpleDateFormat("yyyyMMdd");
@@ -283,6 +285,13 @@ public class StoryItem implements Serializable {
                 .filter(Objects::nonNull)
                 .map(ArticleItem::copy)
                 .collect(Collectors.toList()));
+
+        if (Objects.isNull(this.mainImage) && Objects.nonNull(storyItem.mainImage)) {
+            this.mainImage = storyItem.mainImage;
+        }
+
+        this.hasPushed = this.hasPushed || storyItem.hasPushed;
+
     }
 
 }

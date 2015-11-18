@@ -123,7 +123,7 @@ public class JsonIO {
                         Collectors.groupingBy(StoryItem::getPublishDate,
                                 Collectors.averagingDouble(p ->
                                         p.sourceArticles.stream().mapToDouble(j -> j.posFactor)
-                                                .average().getAsDouble()))));
+                                                .average().orElse(0)))));
 
 
         Map<String, Map<String, Double>> negChart =  tmpStoriesUnique.stream()
@@ -131,14 +131,14 @@ public class JsonIO {
                         Collectors.groupingBy(StoryItem::getPublishDate,
                                 Collectors.averagingDouble(p ->
                                         p.sourceArticles.stream().mapToDouble(j -> j.negFactor)
-                                                .average().getAsDouble()))));
+                                                .average().orElse(0)))));
 
         Map<String, Map<String, Double>> neuChart =  tmpStoriesUnique.stream()
                 .collect(Collectors.groupingBy(StoryItem::getKeyword,
                         Collectors.groupingBy(StoryItem::getPublishDate,
                                 Collectors.averagingDouble(p ->
                                         p.sourceArticles.stream().mapToDouble(j -> j.neutralFactor)
-                                                .average().getAsDouble()))));
+                                                .average().orElse(0)))));
 
         writeNDaysBefore(new File("database-3days.json"), tmpStoriesUnique, 3);
         writeNDaysBefore(new File("database-week.json"), tmpStoriesUnique, 7);
