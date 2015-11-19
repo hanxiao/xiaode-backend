@@ -93,9 +93,11 @@ public class StoryItem implements Serializable {
         this.chineseTrans = storyItem.chineseTrans;
         this.fetchTime = storyItem.fetchTime;
         this.hasPushed = storyItem.hasPushed;
-        this.sourceArticles = new HashSet<ArticleItem>();
-        for (ArticleItem articleItem : storyItem.sourceArticles) {
-            this.sourceArticles.add(articleItem.copy());
+        this.sourceArticles = new HashSet<>();
+        if (storyItem.sourceArticles != null) {
+            for (ArticleItem articleItem : storyItem.sourceArticles) {
+                this.sourceArticles.add(articleItem.copy());
+            }
         }
         this.mainImage = storyItem.mainImage;
     }
@@ -127,7 +129,6 @@ public class StoryItem implements Serializable {
     }
 
     private void setSourceArticles(SyndEntry sf) {
-         new HashSet<ArticleItem>();
         String org_content = sf.getDescription().getValue();
         Document doc = Jsoup.parse(org_content);
         Elements links = doc.select("a[href]");

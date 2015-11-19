@@ -5,7 +5,6 @@ import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -13,6 +12,7 @@ import org.slf4j.LoggerFactory;
 import utils.CollectionAdapter;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -29,7 +29,7 @@ public class Notifier {
         LOG.info("Start pushing...");
         String text = storyItem.stream().map(p -> String.format("[%s] %s", p.keyword, p.title))
                 .collect(Collectors.joining("; "));
-        String title = "欧洲金融快报";
+        String title = String.format("欧金所 - %d条新闻", numUpdate);
         sendNotification(deviceServer, title, text, numUpdate);
         storyItem.stream().forEach(StoryItem::setPushed);
     }
@@ -60,29 +60,45 @@ public class Notifier {
             HttpResponse response = httpClient.execute(postDeviceId);
             String json = EntityUtils.toString(response.getEntity());
             JsonArray jsonArray = parseGoogleJson(json);
-            for (int j = 0; j < jsonArray.size(); j++) {
-                String deviceId = jsonArray.get(j).getAsJsonObject()
-                        .get("deviceid").getAsString();
-                LOG.info("push {}", deviceId);
-                try {
-                    if (isIOSDevice(deviceId)) {
-                        service.push(deviceId, iosPayload);
-                    } else if (isAndroidDevice(deviceId)) {
-                        GPNNotification gpnNotification = new GPNNotification(
-                                deviceId, title, text);
-                        StringEntity postingString = new StringEntity(gson.toJson(gpnNotification));//convert your pojo to   json
-                        postGoogle.setEntity(postingString);
-                        postGoogle.setHeader("Content-type", "application/json");
-                        postGoogle.setHeader("Authorization", "key=AIzaSyB8lPfKHZZto9EzMNWROWCbbVrt7v-HMC0");
-                        HttpResponse responseFromGoogle = httpClient.execute(postGoogle);
-                    } else {
-                        LOG.warn("{} device id is not recognized!");
-                    }
-                } catch (Exception ex) {
-                    LOG.warn("Unable push to {}", deviceId);
-                }
 
-            }
+            List<String> deviceIdList = new ArrayList<>();
+
+            jsonArray.forEach(p -> deviceIdList.add(
+                    p.getAsJsonObject()
+                            .get("deviceid")
+                            .getAsString()));
+
+            deviceIdList.stream()
+                    .distinct()
+                    .filter(Notifier::isIOSDevice)
+                    .forEach(p-> {
+                        LOG.info("pushing to {}", p);
+                        service.push(p, iosPayload);
+                    });
+
+//            for (int j = 0; j < jsonArray.size(); j++) {
+//                String deviceId = jsonArray.get(j).getAsJsonObject()
+//                        .get("deviceid").getAsString();
+//                LOG.info("push {}", deviceId);
+//                try {
+//                    if (isIOSDevice(deviceId)) {
+//                        service.push(deviceId, iosPayload);
+//                    } else if (isAndroidDevice(deviceId)) {
+//                        GPNNotification gpnNotification = new GPNNotification(
+//                                deviceId, title, text);
+//                        StringEntity postingString = new StringEntity(gson.toJson(gpnNotification));//convert your pojo to   json
+//                        postGoogle.setEntity(postingString);
+//                        postGoogle.setHeader("Content-type", "application/json");
+//                        postGoogle.setHeader("Authorization", "key=AIzaSyB8lPfKHZZto9EzMNWROWCbbVrt7v-HMC0");
+//                        HttpResponse responseFromGoogle = httpClient.execute(postGoogle);
+//                    } else {
+//                        LOG.warn("{} device id is not recognized!");
+//                    }
+//                } catch (Exception ex) {
+//                    LOG.warn("Unable push to {}", deviceId);
+//                }
+//
+//            }
         } catch (IOException ex) {
             ex.printStackTrace();
             LOG.error("Unable to fetch all users");

@@ -66,8 +66,10 @@ public class JsonIO {
     }
 
     public static List<StoryItem> writeStoriesData(FeedDatabase feedDatabase) {
-        List<StoryItem> tmpStories = feedDatabase.getAllFeeds().values().stream().flatMap(p -> p.allStories.stream())
+        List<StoryItem> tmpStories = feedDatabase.getAllFeeds()
+                .values().stream().flatMap(p -> p.allStories.stream())
                 .sorted((e1, e2) -> Long.compare(e2.publishTime, e1.publishTime))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
 
         ArrayList<StoryItem> tmpStoriesUnique = new ArrayList<StoryItem>();
