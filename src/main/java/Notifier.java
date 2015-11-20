@@ -49,7 +49,7 @@ public class Notifier {
 
         ApnsService service =
                 APNS.newService()
-                        .withCert("ojins-cert-dev.p12", "xh0531")
+                        .withCert("ojins-cert-prod.p12", "xh0531")
                         .withSandboxDestination()
                         .build();
 
