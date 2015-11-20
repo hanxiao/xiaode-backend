@@ -1,8 +1,10 @@
 import com.google.common.collect.Sets;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.rometools.utils.Strings;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.output.ByteArrayOutputStream;
+import org.imgscalr.Scalr;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import utils.CollectionAdapter;
@@ -151,7 +153,7 @@ public class JsonIO {
         writeSentiment(posChart, new File("senti-negative.json"));
 
         Map<Integer, List<StoryItem>> storyGroup =
-        tmpStoriesUnique.stream().collect(Collectors.groupingBy(StoryItem::getIdByGroup));
+                tmpStoriesUnique.stream().collect(Collectors.groupingBy(StoryItem::getIdByGroup));
 
 
         for (Map.Entry<Integer, List<StoryItem>> entry : storyGroup.entrySet()) {
@@ -171,6 +173,34 @@ public class JsonIO {
         String jsonCompressed = LZString.compressToEncodedURIComponent(jsonOutput);
 
         writeToFile(new File(outFile.getName() + ".lz"), jsonCompressed);
+    }
+
+
+    public static void downloadImg4Stories(List<StoryItem> tmpStoriesUnique) {
+
+        tmpStoriesUnique.stream()
+                .filter(p -> Objects.nonNull(p.mainImage)
+                        && !Strings.isEmpty(p.mainImage))
+                .parallel()
+                .forEach(p -> {
+                    try {
+                        File thumbFile = new File(String.format("thumbnail/%d.jpg", p.id));
+                        if (!thumbFile.exists()) {
+                            URL url = new URL(p.mainImage);
+                            BufferedImage image = (BufferedImage) new ImageIcon(url).getImage();
+                            BufferedImage thumbnail =
+                                    Scalr.resize(image, Scalr.Method.SPEED, Scalr.Mode.FIT_TO_WIDTH,
+                                            300, 300, Scalr.OP_ANTIALIAS);
+                            ImageIO.write(thumbnail, "jpg", thumbFile);
+                        }
+                    } catch (MalformedURLException ex) {
+                        LOG.error("URL is not incorrect format");
+                        ex.printStackTrace();
+                    } catch (IOException ex) {
+                        LOG.error("Can not write image file to disk");
+                        ex.printStackTrace();
+                    }
+                });
     }
 
 

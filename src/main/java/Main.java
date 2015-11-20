@@ -96,6 +96,9 @@ public class Main {
 
         //JsonIO.favIcon2Json(uniqueStories, new File("favicon.json"));
 
+
+        JsonIO.downloadImg4Stories(uniqueStories);
+
         List<StoryItem> newStories = uniqueStories.stream()
                 .filter(p -> p.fetchTime > startTime)
                 .filter(p -> !pushedId.contains(p.id))
