@@ -23,18 +23,22 @@ import java.util.stream.Collectors;
 public class Notifier {
     private static transient final Logger LOG = LoggerFactory.getLogger(Notifier.class);
 
-    private static String deviceServer = "https://spreadsheets.google.com/feeds/list/1Qe_3I7ijdDPp5dFU6ho9eD-5w0gWkVla4nxlGhUGL-I/1/public/basic?alt=json";
+    private static String deviceServerGoogle = "https://spreadsheets.google.com/feeds/list/1Qe_3I7ijdDPp5dFU6ho9eD-5w0gWkVla4nxlGhUGL-I/1/public/basic?alt=json";
+    private static String deviceServerNodeJS = "http://localhost:8080/getallusers";
 
     public static void pushStories2Device(List<StoryItem> storyItem, int numUpdate) {
         LOG.info("Start pushing...");
         String text = storyItem.stream().map(p -> String.format("[%s] %s", p.keyword, p.title))
                 .collect(Collectors.joining("; "));
         String title = String.format("欧金所 - %d条新闻", numUpdate);
-        sendNotification(deviceServer, title, text, numUpdate);
+        sendNotification(deviceServerGoogle, deviceServerNodeJS,
+                title, text, numUpdate);
         storyItem.stream().forEach(StoryItem::setPushed);
     }
 
-    private static void sendNotification(String deviceServer, String title,
+    private static void sendNotification(String deviceServerGoogle,
+                                         String deviceServerNodeJS,
+                                         String title,
                                          String text, int numUpdate) {
 
         Gson gson = new GsonBuilder()
@@ -54,12 +58,15 @@ public class Notifier {
                         .build();
 
         HttpPost postGoogle = new HttpPost("https://gcm-http.googleapis.com/gcm/send");// put in your url
-        HttpGet postDeviceId = new HttpGet(deviceServer);
+        HttpGet postDeviceId = new HttpGet(deviceServerGoogle);
+        HttpGet postDeviceId2 = new HttpGet(deviceServerNodeJS);
         HttpClient httpClient  = new DefaultHttpClient();
         try {
             HttpResponse response = httpClient.execute(postDeviceId);
             String json = EntityUtils.toString(response.getEntity());
             JsonArray jsonArray = parseGoogleJson(json);
+
+
 
             List<String> deviceIdList = new ArrayList<>();
 
@@ -67,6 +74,16 @@ public class Notifier {
                     p.getAsJsonObject()
                             .get("deviceid")
                             .getAsString()));
+
+            response = httpClient.execute(postDeviceId2);
+            json = EntityUtils.toString(response.getEntity());
+            JsonParser jsonParser = new JsonParser();
+            JsonElement jsonElement = jsonParser.parse(json);
+            jsonArray = jsonElement.getAsJsonArray();
+
+            jsonArray.forEach(p -> {
+                deviceIdList.add(p.getAsString().replace("\"",""));
+            });
 
             deviceIdList.stream()
                     .distinct()
@@ -144,6 +161,7 @@ public class Notifier {
 
     public static void main(final String[] args) throws IOException {
         sendNotification("https://spreadsheets.google.com/feeds/list/1Qe_3I7ijdDPp5dFU6ho9eD-5w0gWkVla4nxlGhUGL-I/1/public/basic?alt=json",
+                "http://localhost:8080/getallusers",
                 "测试", "测试一下", 5);
     }
 
