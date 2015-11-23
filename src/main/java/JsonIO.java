@@ -12,6 +12,7 @@ import utils.LZString;
 
 import javax.imageio.ImageIO;
 import javax.swing.*;
+import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -22,6 +23,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -72,6 +74,9 @@ public class JsonIO {
                 .values().stream().flatMap(p -> p.allStories.stream())
                 .sorted((e1, e2) -> Long.compare(e2.publishTime, e1.publishTime))
                 .filter(Objects::nonNull)
+                .filter(p -> Objects.nonNull(p.sourceArticles))
+                .filter(p -> Objects.nonNull(p.summary)
+                        && p.summary.trim().length() > 0)
                 .collect(Collectors.toList());
 
         ArrayList<StoryItem> tmpStoriesUnique = new ArrayList<StoryItem>();
@@ -187,11 +192,21 @@ public class JsonIO {
                         File thumbFile = new File(String.format("thumbnail/%d.jpg", p.id));
                         if (!thumbFile.exists()) {
                             URL url = new URL(p.mainImage);
-                            BufferedImage image = (BufferedImage) new ImageIcon(url).getImage();
+                            ImageIcon icon = new ImageIcon(url);
+                            BufferedImage image = new BufferedImage(
+                                    icon.getIconWidth(),
+                                    icon.getIconHeight(),
+                                    BufferedImage.TYPE_INT_RGB);
+
+                            Graphics g = image.createGraphics();
+                            icon.paintIcon(null, g, 0, 0);
+                            g.dispose();
+
                             BufferedImage thumbnail =
                                     Scalr.resize(image, Scalr.Method.SPEED, Scalr.Mode.FIT_TO_WIDTH,
                                             300, 300, Scalr.OP_ANTIALIAS);
                             ImageIO.write(thumbnail, "jpg", thumbFile);
+                            LOG.info("write thumbnail {}...", thumbFile.getName());
                         }
                     } catch (MalformedURLException ex) {
                         LOG.error("URL is not incorrect format");
