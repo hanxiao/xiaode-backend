@@ -31,18 +31,14 @@ public class Notifier {
         String text = storyItem.stream().map(p -> String.format("[%s] %s", p.keyword, p.title))
                 .collect(Collectors.joining("; "));
         String title = String.format("欧金所 - %d条新闻", numUpdate);
-        sendNotification(deviceServerGoogle, deviceServerNodeJS,
-                title, text, numUpdate);
+        List<String> deviceIdList = getDeviceList();
+        sendNotification(deviceIdList, title, text, numUpdate);
         storyItem.stream().forEach(StoryItem::setPushed);
     }
 
-    private static void sendNotification(String deviceServerGoogle,
-                                         String deviceServerNodeJS,
+    private static void sendNotification(List<String> deviceIdList,
                                          String title,
                                          String text, int numUpdate) {
-
-        Gson gson = new GsonBuilder()
-                .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
 
         String iosPayload = APNS.newPayload()
                 .badge(numUpdate)
@@ -53,37 +49,9 @@ public class Notifier {
 
         ApnsService service =
                 APNS.newService()
-                        .withCert("ojins-cert-dev.p12", "xh0531")
-                        .withSandboxDestination()
+                        .withCert("certificate/ojins_prod_ck.p12", "xh0531")
+                        .withProductionDestination()
                         .build();
-
-        HttpPost postGoogle = new HttpPost("https://gcm-http.googleapis.com/gcm/send");// put in your url
-        HttpGet postDeviceId = new HttpGet(deviceServerGoogle);
-        HttpGet postDeviceId2 = new HttpGet(deviceServerNodeJS);
-        HttpClient httpClient  = new DefaultHttpClient();
-        try {
-            HttpResponse response = httpClient.execute(postDeviceId);
-            String json = EntityUtils.toString(response.getEntity());
-            JsonArray jsonArray = parseGoogleJson(json);
-
-
-
-            List<String> deviceIdList = new ArrayList<>();
-
-            jsonArray.forEach(p -> deviceIdList.add(
-                    p.getAsJsonObject()
-                            .get("deviceid")
-                            .getAsString()));
-
-            response = httpClient.execute(postDeviceId2);
-            json = EntityUtils.toString(response.getEntity());
-            JsonParser jsonParser = new JsonParser();
-            JsonElement jsonElement = jsonParser.parse(json);
-            jsonArray = jsonElement.getAsJsonArray();
-
-            jsonArray.forEach(p -> {
-                deviceIdList.add(p.getAsString().replace("\"",""));
-            });
 
             deviceIdList.stream()
                     .distinct()
@@ -116,10 +84,6 @@ public class Notifier {
 //                }
 //
 //            }
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            LOG.error("Unable to fetch all users");
-        }
     }
 
     private static JsonArray parseGoogleJson(String json) {
@@ -150,9 +114,42 @@ public class Notifier {
 
         return jsonArray;
     }
+    public static List<String> getDeviceList() {
+        HttpPost postGoogle = new HttpPost("https://gcm-http.googleapis.com/gcm/send");// put in your url
+        HttpGet postDeviceId = new HttpGet(deviceServerGoogle);
+        HttpGet postDeviceId2 = new HttpGet(deviceServerNodeJS);
+        HttpClient httpClient  = new DefaultHttpClient();
+        List<String> deviceIdList = new ArrayList<>();
+
+        try {
+            HttpResponse response = httpClient.execute(postDeviceId);
+            String json = EntityUtils.toString(response.getEntity());
+            JsonArray jsonArray = parseGoogleJson(json);
+
+            jsonArray.forEach(p -> deviceIdList.add(
+                    p.getAsJsonObject()
+                            .get("deviceid")
+                            .getAsString()));
+
+            response = httpClient.execute(postDeviceId2);
+            json = EntityUtils.toString(response.getEntity());
+            JsonParser jsonParser = new JsonParser();
+            JsonElement jsonElement = jsonParser.parse(json);
+            jsonArray = jsonElement.getAsJsonArray();
+
+            jsonArray.forEach(p -> {
+                deviceIdList.add(p.getAsString().replace("\"",""));
+            });
+        } catch (IOException ex) {
+            ex.printStackTrace();
+            LOG.error("Unable to fetch all users");
+        }
+
+        return deviceIdList;
+    }
 
     public static boolean isIOSDevice(String deviceId) {
-        return true;
+        return deviceId.length()==64;
     }
 
     public static boolean isAndroidDevice(String deviceId) {
@@ -160,9 +157,10 @@ public class Notifier {
     }
 
     public static void main(final String[] args) throws IOException {
-        sendNotification("https://spreadsheets.google.com/feeds/list/1Qe_3I7ijdDPp5dFU6ho9eD-5w0gWkVla4nxlGhUGL-I/1/public/basic?alt=json",
-                "http://localhost:8080/getallusers",
-                "测试", "测试一下", 5);
+        List<String> ss = new ArrayList<>();
+        ss.add("ca959d3c188b732a1b2e444eae1f6c0d81f079d5277ab2c62b5ec07680e69f27");
+        sendNotification(getDeviceList(),
+                "测试", "测试两下，看到麻烦微信我", 5);
     }
 
 }
