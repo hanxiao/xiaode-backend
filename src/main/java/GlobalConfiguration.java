@@ -1,4 +1,6 @@
 import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 
@@ -10,4 +12,11 @@ public class GlobalConfiguration {
     public static File visitedFile = new File("visited-stories.json");
     public static Set<String> visitedStories =
             JsonIO.loadVisitedStories(visitedFile);
+
+    public static SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+
+    public static long convertStr2Long(String timestamp) throws ParseException {
+        return dateFormat.parse(timestamp).getTime();
+    }
+
 }

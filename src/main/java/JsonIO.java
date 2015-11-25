@@ -386,4 +386,17 @@ public class JsonIO {
             LOG.error("Could not save Database {}", outFile, ex);
         }
     }
+
+    public static void writeDeviceIDs(List<Device> deviceList, File outFile) {
+        String jsonOutput = gson.toJson(deviceList.toArray());
+
+        try {
+            PrintWriter writer = new PrintWriter(new FileOutputStream(outFile, false));
+            writer.println(jsonOutput);
+            writer.flush();
+            writer.close();
+        } catch (IOException ex) {
+            LOG.error("Could not save Database {}", outFile, ex);
+        }
+    }
 }
