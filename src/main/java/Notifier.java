@@ -1,4 +1,7 @@
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.notnoop.apns.APNS;
 import com.notnoop.apns.ApnsService;
 import org.apache.http.HttpResponse;
@@ -9,11 +12,9 @@ import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import utils.CollectionAdapter;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,7 +25,7 @@ public class Notifier {
     private static transient final Logger LOG = LoggerFactory.getLogger(Notifier.class);
 
     private static String deviceServerGoogle = "https://spreadsheets.google.com/feeds/list/1Qe_3I7ijdDPp5dFU6ho9eD-5w0gWkVla4nxlGhUGL-I/1/public/basic?alt=json";
-    private static String deviceServerNodeJS = "http://localhost:8080/getallusers";
+    private static String deviceServerNodeJS = "http://52.192.121.54:8080/getallusers";
 
     public static void pushStories2Device(List<StoryItem> storyItem, int numUpdate) {
         LOG.info("Start pushing...");
