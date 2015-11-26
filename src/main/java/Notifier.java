@@ -13,10 +13,7 @@ import utils.CollectionAdapter;
 
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -26,7 +23,7 @@ public class Notifier {
     private static transient final Logger LOG = LoggerFactory.getLogger(Notifier.class);
 
     private static String deviceServerGoogle = "https://spreadsheets.google.com/feeds/list/1Qe_3I7ijdDPp5dFU6ho9eD-5w0gWkVla4nxlGhUGL-I/1/public/basic?alt=json";
-    private static String deviceServerNodeJS = "http://52.192.121.54:8080/getallusers";
+    private static String deviceServerNodeJS = "http://news-api.ojins.com:8080/getallusers";
     private static Gson gson = new GsonBuilder()
             .registerTypeHierarchyAdapter(Collection.class, new CollectionAdapter()).create();
 
@@ -129,30 +126,42 @@ public class Notifier {
 
         try {
             HttpResponse response = httpClient.execute(postDeviceId);
-            String json = EntityUtils.toString(response.getEntity());
+            String json = EntityUtils.toString(response.getEntity()).toLowerCase();
             JsonArray jsonArray = parseGoogleJson(json);
             Device[] devicesGoogle = gson.fromJson(jsonArray, Device[].class);
             deviceIdList.addAll(Arrays.stream(devicesGoogle)
                     .filter(Device::isAppleDevice)
                     .collect(Collectors.toList())
             );
-            deviceIdList.stream().forEach(Device::reformat);
-            JsonIO.writeDeviceIDs(deviceIdList, new File("device-list.json"));
+
             response = httpClient.execute(postDeviceId2);
-            json = EntityUtils.toString(response.getEntity());
+            json = EntityUtils.toString(response.getEntity()).toLowerCase();
             JsonParser jsonParser = new JsonParser();
             JsonElement jsonElement = jsonParser.parse(json);
             Device[] devicesAWS = gson.fromJson(jsonElement, Device[].class);
-
-
 
             deviceIdList.addAll(Arrays.stream(devicesAWS).collect(Collectors.toList()));
         } catch (IOException ex) {
             ex.printStackTrace();
             LOG.error("Unable to fetch all users");
+        } finally {
+            deviceIdList.stream().forEach(Device::reformat);
+            JsonIO.writeDeviceIDs(deviceIdList, new File("device-list.json"));
         }
-        deviceIdList.stream().forEach(Device::reformat);
+        HashMap<String, Device> uniqueDevices = new HashMap<>();
+        deviceIdList.stream().forEach(p -> {
+                if (uniqueDevices.containsKey(p.getDeviceID())) {
+                    if (p.getTimestamp()
+                            > uniqueDevices.get(p.getDeviceID()).getTimestamp()) {
+                        uniqueDevices.replace(p.getDeviceID(), p);
+                    }
+                } else {
+                    uniqueDevices.put(p.getDeviceID(), p);
+                }
+        });
 
+        deviceIdList = uniqueDevices.values().stream()
+                .collect(Collectors.toList());
         return deviceIdList;
     }
 

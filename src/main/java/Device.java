@@ -9,13 +9,19 @@ import java.util.Calendar;
 public class Device {
     private String timestamp;
     private String deviceid;
-    private String deviceos;
-    private String timezone;
-    private String favtopic;
-    private String pushinterval;
-    private String syslang;
-    private long timestamplong;
-    private int pushintervalint;
+    private String deviceos = "ios";
+    private String timezone = "+0";
+    private String favtopic = "all";
+    private String pushinterval = "3";
+    private String syslang = "zh-cn";
+    private long timestamplong = 0;
+    private int pushintervalint = 3;
+
+    public int getTimezone() {
+        return timezoneint;
+    }
+
+    private int timezoneint = 0;
 
     public long getTimestamp() {
         return timestamplong;
@@ -41,15 +47,36 @@ public class Device {
     }
 
     public void reformat() {
-        try {
-            timestamplong = GlobalConfiguration.convertStr2Long(timestamp);
-            if (Strings.isNullOrEmpty(pushinterval)) {
-                pushintervalint = 1;
-            } else {
-                pushintervalint = Integer.parseInt(pushinterval);
+
+
+        if (!Strings.isNullOrEmpty(pushinterval)
+                && !pushinterval.trim().equals("undefined")) {
+            pushintervalint = Integer.parseInt(pushinterval);
+        }
+        if (!Strings.isNullOrEmpty(timezone)
+                && !timezone.trim().equals("undefined")) {
+            if (timezone.contains(":")) {
+                timezone = timezone.split(":")[0];
             }
-        } catch (ParseException ex) {
-            ex.printStackTrace();
+            timezoneint = Integer.parseInt(timezone);
+        }
+        if (favtopic.equals("undefined")) {
+            favtopic = "all";
+        }
+
+        if (Strings.isNullOrEmpty(syslang) || syslang.trim().equals("undefined")) {
+            syslang = "zh-cn";
+        }
+
+        try {
+            timestamplong = Long.parseLong(timestamp);
+        } catch (NumberFormatException ex) {
+            try {
+                timestamplong = GlobalConfiguration.convertStr2Long(timestamp);
+            } catch (ParseException ex2) {
+                timestamplong = 0;
+                ex2.printStackTrace();
+            }
         }
     }
 
@@ -58,11 +85,11 @@ public class Device {
     public String toString() {
         return String.format("%s\t%s\t%s\t%s\t%s",
                 deviceid.substring(0, Math.min(deviceid.length(), 5)),
-                timezone,
+                getTimezone(),
                 favtopic,
-                pushinterval,
+                getPushInterval(),
                 syslang
-                );
+        );
     }
 
 
