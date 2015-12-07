@@ -117,6 +117,8 @@ public class Notifier {
 
         return jsonArray;
     }
+
+
     public static List<Device> getDeviceList() {
         HttpPost postGoogle = new HttpPost("https://gcm-http.googleapis.com/gcm/send");// put in your url
         HttpGet postDeviceId = new HttpGet(deviceServerGoogle);
