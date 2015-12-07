@@ -36,8 +36,13 @@ public class Device {
     }
 
 
+
     public boolean isAppleDevice() {
-        return deviceid.length() == 64;
+        return deviceos.equals("ios") && deviceid.length() == 64;
+    }
+
+    public boolean isAndroidDevice() {
+        return deviceos.equals("android") && deviceid.length() == 152;
     }
 
     public boolean isTimeToPush() {

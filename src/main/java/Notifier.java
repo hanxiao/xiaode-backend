@@ -1,3 +1,6 @@
+import com.google.android.gcm.server.Message;
+import com.google.android.gcm.server.Result;
+import com.google.android.gcm.server.Sender;
 import com.google.gson.*;
 import com.notnoop.apns.APNS;
 import com.notnoop.apns.ApnsService;
@@ -34,13 +37,42 @@ public class Notifier {
                 .collect(Collectors.joining("; "));
         String title = String.format("欧金所 - %d条新闻", numUpdate);
         List<Device> deviceIdList = getDeviceList();
-        sendNotification(deviceIdList, title, text, numUpdate);
+        sendNotiIOS(deviceIdList, title, text, numUpdate);
+        sendNotiAndroid(deviceIdList, title, text, numUpdate);
         storyItem.stream().forEach(StoryItem::setPushed);
     }
 
-    private static void sendNotification(List<Device> deviceIdList,
-                                         String title,
-                                         String text, int numUpdate) {
+
+    private static void sendNotiAndroid(List<Device> deviceIdList,
+                                        String title,
+                                        String text, int numUpdate) {
+        Message message =  new Message.Builder()
+                .addData("message", text)
+                .addData("title", title)
+                .build();
+
+        Sender sender = new Sender("AIzaSyB8lPfKHZZto9EzMNWROWCbbVrt7v-HMC0");
+
+
+        deviceIdList.stream()
+                .distinct()
+                .filter(Device::isAndroidDevice)
+//                .filter(Device::isTimeToPush)
+                .forEach(p -> {
+                    try {
+                        Result result = sender.send(message, p.getDeviceID(), 3);
+                        LOG.info(p.toString());
+                    } catch (Exception error) {
+                        LOG.error("Unable to push to Android devices");
+                        error.printStackTrace();
+                    }
+                });
+    }
+
+
+    private static void sendNotiIOS(List<Device> deviceIdList,
+                                    String title,
+                                    String text, int numUpdate) {
 
         String iosPayload = APNS.newPayload()
                 .badge(numUpdate)
@@ -55,38 +87,16 @@ public class Notifier {
                         .withProductionDestination()
                         .build();
 
-            deviceIdList.stream()
-                    .distinct()
-                    .filter(Device::isAppleDevice)
-                    .filter(Device::isTimeToPush)
-                    .forEach(p-> {
-                        LOG.info(p.toString());
-                        service.push(p.getDeviceID(), iosPayload);
-                    });
+        deviceIdList.stream()
+                .distinct()
+                .filter(Device::isAppleDevice)
+                .filter(Device::isTimeToPush)
+                .forEach(p-> {
+                    service.push(p.getDeviceID(), iosPayload);
+                    LOG.info(p.toString());
+                });
 
-//            for (int j = 0; j < jsonArray.size(); j++) {
-//                String deviceId = jsonArray.get(j).getAsJsonObject()
-//                        .get("deviceid").getAsString();
-//                LOG.info("push {}", deviceId);
-//                try {
-//                    if (isIOSDevice(deviceId)) {
-//                        service.push(deviceId, iosPayload);
-//                    } else if (isAndroidDevice(deviceId)) {
-//                        GPNNotification gpnNotification = new GPNNotification(
-//                                deviceId, title, text);
-//                        StringEntity postingString = new StringEntity(gson.toJson(gpnNotification));//convert your pojo to   json
-//                        postGoogle.setEntity(postingString);
-//                        postGoogle.setHeader("Content-type", "application/json");
-//                        postGoogle.setHeader("Authorization", "key=AIzaSyB8lPfKHZZto9EzMNWROWCbbVrt7v-HMC0");
-//                        HttpResponse responseFromGoogle = httpClient.execute(postGoogle);
-//                    } else {
-//                        LOG.warn("{} device id is not recognized!");
-//                    }
-//                } catch (Exception ex) {
-//                    LOG.warn("Unable push to {}", deviceId);
-//                }
-//
-//            }
+
     }
 
     private static JsonArray parseGoogleJson(String json) {
@@ -109,7 +119,7 @@ public class Notifier {
                     .getAsJsonObject()
                     .get("$t").getAsString().split(",");
             for (String rowCol : rowCols) {
-                String[] keyVal = rowCol.split(":");
+                String[] keyVal = rowCol.split(": ");
                 rowObj.addProperty(keyVal[0].trim(), keyVal[1].trim());
             }
             jsonArray.add(rowObj);
@@ -127,22 +137,29 @@ public class Notifier {
         List<Device> deviceIdList = new ArrayList<>();
 
         try {
+            //From google Sheet
             HttpResponse response = httpClient.execute(postDeviceId);
-            String json = EntityUtils.toString(response.getEntity()).toLowerCase();
+            String json = EntityUtils.toString(response.getEntity());
             JsonArray jsonArray = parseGoogleJson(json);
             Device[] devicesGoogle = gson.fromJson(jsonArray, Device[].class);
             deviceIdList.addAll(Arrays.stream(devicesGoogle)
-                    .filter(Device::isAppleDevice)
                     .collect(Collectors.toList())
             );
 
+            //From nodejs Server
             response = httpClient.execute(postDeviceId2);
-            json = EntityUtils.toString(response.getEntity()).toLowerCase();
+            json = EntityUtils.toString(response.getEntity())
+                    .replace("favTopic", "favtopic")
+                    .replace("deviceId", "deviceid")
+                    .replace("deviceOS", "deviceos")
+                    .replace("sysLang", "syslang")
+                    .replace("pushInterval", "pushinterval");
             JsonParser jsonParser = new JsonParser();
             JsonElement jsonElement = jsonParser.parse(json);
             Device[] devicesAWS = gson.fromJson(jsonElement, Device[].class);
 
-            deviceIdList.addAll(Arrays.stream(devicesAWS).collect(Collectors.toList()));
+            deviceIdList.addAll(Arrays.stream(devicesAWS)
+                    .collect(Collectors.toList()));
         } catch (IOException ex) {
             ex.printStackTrace();
             LOG.error("Unable to fetch all users");
@@ -152,14 +169,14 @@ public class Notifier {
         }
         HashMap<String, Device> uniqueDevices = new HashMap<>();
         deviceIdList.stream().forEach(p -> {
-                if (uniqueDevices.containsKey(p.getDeviceID())) {
-                    if (p.getTimestamp()
-                            > uniqueDevices.get(p.getDeviceID()).getTimestamp()) {
-                        uniqueDevices.replace(p.getDeviceID(), p);
-                    }
-                } else {
-                    uniqueDevices.put(p.getDeviceID(), p);
+            if (uniqueDevices.containsKey(p.getDeviceID())) {
+                if (p.getTimestamp()
+                        > uniqueDevices.get(p.getDeviceID()).getTimestamp()) {
+                    uniqueDevices.replace(p.getDeviceID(), p);
                 }
+            } else {
+                uniqueDevices.put(p.getDeviceID(), p);
+            }
         });
 
         deviceIdList = uniqueDevices.values().stream()
@@ -168,9 +185,14 @@ public class Notifier {
     }
 
     public static void main(final String[] args) throws IOException {
-        List<String> ss = new ArrayList<>();
-        ss.add("ca959d3c188b732a1b2e444eae1f6c0d81f079d5277ab2c62b5ec07680e69f27");
-        sendNotification(getDeviceList(),
+        List<Device> devices = getDeviceList();
+//        sendNotiIOS(devices.stream()
+//                        .filter(Device::isAppleDevice)
+//                        .collect(Collectors.toList()),
+//                "测试", "测试两下，看到麻烦微信我", 5);
+        sendNotiAndroid(devices.stream()
+                        .filter(Device::isAndroidDevice)
+                        .collect(Collectors.toList()),
                 "测试", "测试两下，看到麻烦微信我", 5);
     }
 
