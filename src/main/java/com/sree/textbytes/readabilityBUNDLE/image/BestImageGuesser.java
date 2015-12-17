@@ -46,7 +46,9 @@ public class BestImageGuesser {
 		matchBadImageNames = Pattern.compile(sb.toString()).matcher(string.empty);
 		
 		StringBuilder knownJunkImages = new StringBuilder();
-		knownJunkImages.append("d-logo-blue-100x100.png|WSJ_profile_lg.gif|dealbook75.gif|t_wb_75.gif|fivethirtyeight75.gif|current_issue.jpg|thecaucus75.gif");
+		knownJunkImages.append("d-logo-blue-100x100|WSJ_profile_lg|dealbook75" +
+				"|t_wb_75|fivethirtyeight75|" +
+				"current_issue|thecaucus75|rcom-default|default|udn_baby|l2009|logo");
 		
 		knownJunkImageMatcher = Pattern.compile(knownJunkImages.toString()).matcher(string.empty);
 	}

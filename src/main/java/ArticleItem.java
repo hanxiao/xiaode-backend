@@ -116,7 +116,7 @@ public class ArticleItem implements Serializable {
                         imageUrl = article.getTopImage().getImageSrc();
 
                         if (imageUrl != null) {
-                            if (!imageUrl.startsWith("http") && !imageUrl.contains("logo")) {
+                            if (!imageUrl.startsWith("http") && GlobalConfiguration.isValidImageUrl(imageUrl)) {
 
                                 fetchDoc.getElementsByTag("img")
                                         .stream()
@@ -132,7 +132,7 @@ public class ArticleItem implements Serializable {
                                     imageUrl = completeImageUrl(imageUrl);
                                 }
                             } else {
-                                imageUrl = (!imageUrl.contains("logo")
+                                imageUrl = (GlobalConfiguration.isValidImageUrl(imageUrl)
                                         && imageUrl.trim().length() > 0) ?
                                         this.imageUrl : null;
                             }

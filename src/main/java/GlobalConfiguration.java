@@ -19,4 +19,14 @@ public class GlobalConfiguration {
         return dateFormat.parse(timestamp).getTime();
     }
 
+    public static String[] junkImageUrl = new String[] {"rcom-default", "udn_baby", "logo", "l2009"};
+
+    public static boolean isValidImageUrl(String url) {
+        String url1 = url.trim().toLowerCase();
+        for (String s : junkImageUrl) {
+            if (url1.contains(s)) return false;
+        }
+        return true;
+    }
+
 }
