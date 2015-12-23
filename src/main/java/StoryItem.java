@@ -30,7 +30,7 @@ public class StoryItem implements Serializable {
     private static transient final Logger LOG = LoggerFactory.getLogger(StoryItem.class);
 
     public int getIdByGroup() {
-        return Math.abs(id % 10);
+        return Math.abs(id % 50);
     }
 
     public int id;
