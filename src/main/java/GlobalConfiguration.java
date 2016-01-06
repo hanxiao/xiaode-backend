@@ -25,7 +25,10 @@ public class GlobalConfiguration {
             "udn_baby",
             "logo",
             "l2009",
-            "2015-06-18"};
+            "2015-06-18",
+            "MDJ-FB",
+            "moneyudn"
+    };
 
     public static boolean isValidImageUrl(String url) {
         String url1 = url.trim().toLowerCase();
