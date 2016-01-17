@@ -48,7 +48,10 @@ public class BestImageGuesser {
 		StringBuilder knownJunkImages = new StringBuilder();
 		knownJunkImages.append("d-logo-blue-100x100|WSJ_profile_lg|dealbook75" +
 				"|t_wb_75|fivethirtyeight75|" +
-				"current_issue|thecaucus75|rcom-default|default|moneyudn|udn_baby|l2009|logo|MDJ-FB");
+				"current_issue|thecaucus75|" +
+				"rcom-default|default|moneyudn|" +
+				"udn_baby|l2009|logo|MDJ-FB|" +
+				"c372022486173e3|Rq5b-fxnqrny6785575");
 		
 		knownJunkImageMatcher = Pattern.compile(knownJunkImages.toString()).matcher(string.empty);
 	}

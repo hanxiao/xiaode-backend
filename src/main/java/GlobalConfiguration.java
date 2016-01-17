@@ -27,7 +27,9 @@ public class GlobalConfiguration {
             "l2009",
             "2015-06-18",
             "MDJ-FB",
-            "moneyudn"
+            "moneyudn",
+            "c372022486173e3",
+            "Rq5b-fxnqrny6785575"
     };
 
     public static boolean isValidImageUrl(String url) {
