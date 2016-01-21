@@ -12,7 +12,7 @@ import java.net.URL;
 import java.net.URLEncoder;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.concurrent.ExecutionException;
+import java.util.concurrent.*;
 
 
 /**
@@ -54,23 +54,51 @@ public class FeedItem implements Serializable {
         long timeDiff = System.currentTimeMillis() - lastUpdateTime;
         if (lastUpdateTime == 0 || timeDiff > (UpdateInterval.HOUR.getNumVal() / 2)) {
             try {
+                ExecutorService executorService = Executors.newFixedThreadPool(GlobalConfiguration.numThread);
+
                 SyndFeedInput input = new SyndFeedInput();
                 SyndFeed feed = input.build(new XmlReader(feedUrl));
-                GlobalConfiguration.forkJoinPool.submit(() ->
-                        feed.getEntries().parallelStream().map(p ->
-                                new StoryItem(feedName, p))
-                                .filter(p-> p!=null)
-                                .forEach(p -> {
-                                    allStories.add(p);
-                                    LOG.info("New post {} is added to {}!", p.title, feedName);
-                                })).get();
+
+                feed.getEntries().stream().map(p -> {
+
+                    Future<StoryItem> task = executorService.submit(() ->
+                            new StoryItem(feedName, p));
+
+                    try {
+                        return task.get(10, TimeUnit.SECONDS);
+                    } catch (InterruptedException | ExecutionException ex) {
+                        LOG.error("Thread pool is error");
+                        return null;
+                    } catch (TimeoutException e) {
+                        LOG.error("Thread timeout when {}->{}", feedName, p);
+                        return null;
+                    }
+                })
+                        .filter(p-> p!=null)
+                        .forEach(p -> {
+                            allStories.add(p);
+                            LOG.info("New post {} is added to {}!", p.title, feedName);
+                        });
+
+
+//                GlobalConfiguration.forkJoinPool.submit(() ->
+//                        feed.getEntries().parallelStream().map(p ->
+//                                new StoryItem(feedName, p))
+//                                .filter(p-> p!=null)
+//                                .forEach(p -> {
+//                                    allStories.add(p);
+//                                    LOG.info("New post {} is added to {}!", p.title, feedName);
+//                                })).get(10, TimeUnit.SECONDS);
             }
             catch (IOException | FeedException exception) {
                 LOG.error("Can not read from {}", feedUrl);
             }
-            catch (InterruptedException | ExecutionException ex) {
-                LOG.error("Thread pool is error");
-            }
+//            catch (InterruptedException | ExecutionException ex) {
+//                LOG.error("Thread pool is error");
+//            } catch (TimeoutException e) {
+//                LOG.error("Thread timeout when ");
+////                e.printStackTrace();
+//            }
             this.lastUpdateTime = System.currentTimeMillis();
         } else {
             LOG.info("Feed {} has been updated {} hour ago.",

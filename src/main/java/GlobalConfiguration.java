@@ -13,6 +13,8 @@ public class GlobalConfiguration {
     public static Set<String> visitedStories =
             JsonIO.loadVisitedStories(visitedFile);
 
+    public static int numThread = 20;
+
     public static SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 
     public static long convertStr2Long(String timestamp) throws ParseException {
