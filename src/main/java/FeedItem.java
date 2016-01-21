@@ -65,7 +65,7 @@ public class FeedItem implements Serializable {
                             new StoryItem(feedName, p));
 
                     try {
-                        return task.get(10, TimeUnit.SECONDS);
+                        return task.get(1, TimeUnit.MINUTES);
                     } catch (InterruptedException | ExecutionException ex) {
                         LOG.error("Thread pool is error");
                         return null;
