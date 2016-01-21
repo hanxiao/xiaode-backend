@@ -7,7 +7,6 @@ import com.notnoop.apns.ApnsService;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.slf4j.Logger;
@@ -57,7 +56,7 @@ public class Notifier {
         deviceIdList.stream()
                 .distinct()
                 .filter(Device::isAndroidDevice)
-//                .filter(Device::isTimeToPush)
+                .filter(Device::isTimeToPush)
                 .forEach(p -> {
                     try {
                         Result result = sender.send(message, p.getDeviceID(), 3);
@@ -130,7 +129,6 @@ public class Notifier {
 
 
     public static List<Device> getDeviceList() {
-        HttpPost postGoogle = new HttpPost("https://gcm-http.googleapis.com/gcm/send");// put in your url
         HttpGet postDeviceId = new HttpGet(deviceServerGoogle);
         HttpGet postDeviceId2 = new HttpGet(deviceServerNodeJS);
         HttpClient httpClient  = new DefaultHttpClient();

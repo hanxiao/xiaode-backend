@@ -88,7 +88,14 @@ public class Device {
 
     @Override
     public String toString() {
-        return String.format("%s\t%s\t%s\t%s\t%s",
+        return String.format(
+                "deviceos:%s\t" +
+                "timezone:%s\t" +
+                "deviceid%s\t" +
+                "favtopic%s\t" +
+                "pushfreq:%d\t" +
+                "syslang:%s",
+                deviceos,
                 deviceid.substring(0, Math.min(deviceid.length(), 5)),
                 getTimezone(),
                 favtopic,
