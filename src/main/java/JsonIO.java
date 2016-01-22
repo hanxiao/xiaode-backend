@@ -282,10 +282,10 @@ public class JsonIO {
         String jsonOutput = gson.toJson(feedDatabase);
 
         writeToFile(outFile, jsonOutput);
-        LOG.info("Compressing...");
-        String jsonCompressed = LZString.compressToEncodedURIComponent(jsonOutput);
-
-        writeToFile(new File(outFile.getName() + ".lz"), jsonCompressed);
+//        LOG.info("Compressing...");
+//        String jsonCompressed = LZString.compressToEncodedURIComponent(jsonOutput);
+//
+//        writeToFile(new File(outFile.getName() + ".lz"), jsonCompressed);
 
     }
 

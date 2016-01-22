@@ -49,4 +49,4 @@ crashlytics-build.properties.idea
 database*.json
 *.log
 
-testLZ
+testLZ/
