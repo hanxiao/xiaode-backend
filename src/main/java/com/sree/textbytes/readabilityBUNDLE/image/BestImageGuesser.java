@@ -51,7 +51,7 @@ public class BestImageGuesser {
 				"current_issue|thecaucus75|" +
 				"rcom-default|default|moneyudn|" +
 				"udn_baby|l2009|logo|MDJ-FB|" +
-				"c372022486173e3|Rq5b-fxnqrny6785575|share|1f3a5f4fabd8dac");
+				"c372022486173e3|Rq5b-fxnqrny6785575|share|sns_quamnet|1f3a5f4fabd8dac");
 		
 		knownJunkImageMatcher = Pattern.compile(knownJunkImages.toString()).matcher(string.empty);
 	}

@@ -33,7 +33,8 @@ public class GlobalConfiguration {
             "c372022486173e3",
             "Rq5b-fxnqrny6785575",
             "1f3a5f4fabd8dac",
-            "share"
+            "share",
+            "sns_quamnet"
     };
 
     public static boolean isValidImageUrl(String url) {
